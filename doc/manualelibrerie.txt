@@ -1,0 +1,66 @@
+3. Documento sulle Tecnologie e Librerie Utilizzate
+Titolo: TheKnife – Tecnologie, Librerie e Strumenti
+Versione: 1.0
+Anno Accademico: 2024/2025
+
+1. Introduzione
+Questo documento descrive in dettaglio quali librerie, quali tecnologie e quali strumenti sono stati usati nello sviluppo di TheKnife, e le motivazioni alla base di tali scelte.
+
+2. Tecnologie Principali
+Linguaggio Java
+
+Versione: 17 o successiva (compilato e testato anche su Java 21).
+
+Motivazione: fornisce portabilità e ampio supporto di librerie standard, ideale per gestire file CSV e per creare applicazioni desktop con Swing.
+
+Libreria Standard Java (JDK)
+
+Package: java.io per File I/O, java.util per le Collections, java.awt e javax.swing per l’interfaccia grafica.
+
+Swing
+
+Scopo: creare l’interfaccia grafica (GUI). L’applicazione è monolitica, con JFrame, JPanel, JDialog per login e registrazione, e vari layout manager (FlowLayout, GridLayout, BorderLayout, CardLayout).
+
+Motivazione: Swing è incluso nel JDK, non richiede librerie esterne, e soddisfa i requisiti di un client desktop semplice.
+
+3. Librerie Esterne
+NimbusLookAndFeel: in realtà fa parte di Java standard a partire dalla Java 6 update 10, per un aspetto più moderno rispetto al Metal di default. Non è una libreria esterna separata.
+
+Nessuna ulteriore libreria di terze parti (come MySQL connector, Hibernate, ecc.) è stata utilizzata. Tutti i file CSV sono gestiti in modo nativo con FileReader/FileWriter.
+
+4. Strumenti di Sviluppo
+IDE preferito: Visual Studio Code (con Extension Pack for Java) oppure Eclipse/IntelliJ.
+
+Compilazione:
+
+Da linea di comando:
+
+bash
+Copia
+Modifica
+javac -d bin src/theknife/*.java src/theknife/gui/*.java src/theknife/gui/panels/*.java
+Se si desidera un jar eseguibile:
+
+bash
+Copia
+Modifica
+jar cfe TheKnife.jar theknife.gui.MainApp -C bin .
+Controllo di Versione (opzionale): GIT, con repository su GitHub o simili (non obbligatorio nelle specifiche, ma consigliato).
+
+5. Gestione File CSV
+Approccio: Caricamento e salvataggio vengono fatti per intero (legge tutte le righe, costruisce oggetti in memoria, alla fine riscrive il file completo).
+
+Pro e contro:
+
+Pro: semplicità; perfetto per dataset di dimensioni piccole o medie.
+
+Contro: non c’è un accesso concorrente; se due utenti aggiornassero contemporaneamente lo stesso file, potremmo avere conflitti (non gestiti).
+
+6. Eventuali Dipendenze e Compatibilità
+Compatibilità: progetti testati su Windows 10/11 e Ubuntu 22.04 con Java 17/19/21.
+
+Dipendenze: nessuna esterna oltre al JDK e al supporto Swing standard.
+
+7. Conclusioni
+Il progetto TheKnife utilizza tecnologie semplici e consolidate (Java e Swing), realizzando un prototipo di piattaforma per ristoranti e recensioni. L’obiettivo formativo è mostrare la manipolazione di file CSV, la gestione di un’interfaccia grafica e un’architettura a pacchetti. Per usi futuri si potrebbe migrare a un database vero e un framework MVC, ma per un Laboratorio Interdisciplinare la presente soluzione è sufficiente e didatticamente significativa.
+

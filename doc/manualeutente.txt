@@ -1,0 +1,150 @@
+1. Manuale Utente
+Titolo: TheKnife – Manuale Utente
+Versione: 1.0
+Anno Accademico: 2024/2025
+
+1. Introduzione
+Benvenuto/a nel Manuale Utente dell’applicazione TheKnife. Questo documento spiega, in modo chiaro e passo dopo passo, come utilizzare la piattaforma che consente di:
+
+Cercare ristoranti in tutto il mondo.
+
+Registrarsi e accedere come cliente o come ristoratore.
+
+Gestire recensioni, preferiti e caratteristiche dei ristoranti.
+
+TheKnife è pensato per essere intuitivo e usabile anche da chi non ha particolari competenze informatiche.
+
+1.1 Scopo del Manuale
+Illustrare le funzionalità disponibili (ricerca, recensioni, preferiti...).
+
+Guidare l’utente nei primi passi (installazione, avvio, registrazione).
+
+Fornire esempi di utilizzo e risolvere problemi comuni.
+
+2. Requisiti di Sistema
+Linguaggio: Java (versione 17 o successiva).
+
+Ambiente: un sistema operativo qualsiasi (Windows, Mac, Linux) in grado di eseguire java -jar TheKnife.jar oppure java -cp bin theknife.gui.MainApp.
+
+Memoria: non sono richiesti requisiti particolari (il progetto è leggero).
+
+File CSV presenti nella cartella data/ (utenti.csv, ristoranti.csv, recensioni.csv, preferiti.csv).
+
+3. Installazione e Avvio
+Scarica o copia la cartella del progetto denominata, ad esempio, “TheKnifeProjectComplete”, contenente almeno le seguenti sottocartelle:
+
+src/ (codice sorgente, non indispensabile se hai già i .class o .jar)
+
+bin/ (file compilati .class)
+
+data/ (file CSV con utenti, ristoranti, ecc.)
+
+Se possiedi un file TheKnife.jar:
+
+Esegui java -jar TheKnife.jar da terminale, oppure fai doppio click (in base al tuo sistema operativo).
+
+Altrimenti, se hai la struttura con bin/, esegui:
+
+bash
+Copia
+Modifica
+java -cp bin theknife.gui.MainApp
+Comparirà la finestra principale con la barra in alto (titolo TheKnife) e un menu laterale.
+
+4. Panoramica Interfaccia
+4.1 Barra Superiore (TopBar)
+Titolo: “TheKnife”. Colorato con un gradiente. Non interagibile dall’utente.
+
+4.2 Menu Laterale
+Contiene alcune voci:
+
+Home: pagina iniziale di benvenuto.
+
+Ricerca: per filtrare i ristoranti (città, tipo cucina, prezzo max, consegna, prenotazione).
+
+Miei Ristoranti: se sei un ristoratore, puoi aggiungere nuovi ristoranti e vedere la media recensioni.
+
+Recensioni: se sei loggato, puoi gestire le recensioni (cliente: aggiunta/modifica/elimina; ristoratore: risposta).
+
+Preferiti: se sei un cliente, puoi aggiungere/rimuovere ristoranti preferiti.
+
+Login / Logout: pulsante che ti permette di accedere o disconnetterti.
+
+4.3 Area Principale (CardLayout)
+Ogni sezione del menu apre un pannello specifico:
+
+HomePanel: un testo di benvenuto con qualche indicazione.
+
+SearchPanel: caselle di input (città, cucina, prezzo…) e un bottone “Cerca”. Risultati in un’area di testo.
+
+RistorantiPanel: mostra l’elenco dei ristoranti esistenti; bottone per aggiungerne di nuovi.
+
+RecensioniPanel: elenco delle recensioni (anonime se non loggato). Se loggato come cliente, puoi inserire/aggiornare/eliminare recensioni; se ristoratore, puoi rispondere.
+
+PreferitiPanel: lista dei ristoranti preferiti di un cliente. Puoi aggiungere un preferito selezionandolo da un elenco o rimuoverlo.
+
+5. Funzionalità Principali
+5.1 Registrazione
+Clicca sul pulsante Login nel menu laterale.
+
+Nella finestra “Login”, seleziona “Registrati”.
+
+Compila i campi (Nome, Cognome, Username, Password, Ruolo).
+
+Se il tuo username non esiste già, comparirà il messaggio “Utente registrato con successo!”.
+
+5.2 Login
+Sempre dalla finestra di “Login”, inserisci username e password validi.
+
+Se le credenziali combaciano con un utente esistente, la finestra si chiuderà e vedrai “Logout” al posto di “Login”. Ora sei riconosciuto come:
+
+Cliente, se il tuo ruolo era “cliente”.
+
+Ristoratore, se il tuo ruolo era “ristoratore”.
+
+5.3 Ricerca Ristoranti (anche come Guest)
+Clicca su “Ricerca” nel menu.
+
+Inserisci (facoltativamente) una città, un tipo di cucina e/o un prezzo massimo.
+
+Se desideri solo ristoranti con delivery, spunta “Delivery?”. Se vuoi solo prenotabili online, spunta “Prenotazione?”
+
+Premi Cerca.
+
+I risultati appariranno nell’area di testo, con eventuale media di stelle. Se non sei loggato, gli autori delle recensioni non saranno mostrati (restano “anonimi”).
+
+5.4 Preferiti (solo Cliente)
+Clicca su “Preferiti”.
+
+Se non sei loggato come cliente, comparirà un messaggio di errore.
+
+Se sei loggato come cliente, vedrai l’elenco attuale dei preferiti.
+
+“Aggiungi Preferito”: seleziona un ristorante da un elenco e conferma.
+
+“Rimuovi Preferito”: seleziona uno già presente nei preferiti e conferma.
+
+5.5 Recensioni
+Nuova Recensione (Cliente): clicca su “Recensioni” → “Nuova Recensione”. Scegli ristorante, stelle (1..5) e testo. Conferma.
+
+Modifica/Elimina (Cliente): se hai già scritto una recensione, la vedi in elenco. Seleziona la recensione dal menu a tendina e aggiorna o cancella.
+
+Rispondi (Ristoratore): se sei loggato come ristoratore, puoi selezionare una delle recensioni esistenti e inserire una risposta testuale.
+
+5.6 Logout
+Clicca su “Logout” (visibile al posto di “Login” se eri loggato).
+
+Apparirà un messaggio “Logout effettuato!” e tornerai a essere Guest.
+
+6. Risoluzione Problemi Comuni
+Non trovo ristoranti: prova a ridurre i filtri (es. prezzo max troppo basso).
+
+Errore di credenziali: controlla username/password. In utenti.csv, le password sono salvate in chiaro nel prototipo.
+
+Il bottone “Aggiungi Ristorante” non funziona: devi essere un ristoratore loggato. Se hai un ruolo “cliente”, l’operazione è negata.
+
+Recensioni non anonime? Se fai login, vedrai i nomi degli autori; se sei guest, li vedi come “Anonimo”.
+
+7. Conclusioni
+Congratulazioni! Ora sai come utilizzare TheKnife per ricercare ristoranti, registrarti, recensire e gestire preferiti. Se necessiti di ulteriori approfondimenti su implementazione, architettura o strutture dati, consulta il Manuale Tecnico allegato.
+

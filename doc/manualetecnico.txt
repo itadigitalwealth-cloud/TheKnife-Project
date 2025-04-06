@@ -1,0 +1,161 @@
+2. Manuale Tecnico
+Titolo: TheKnife – Manuale Tecnico
+Versione: 1.0
+Anno Accademico: 2024/2025
+
+1. Scopo del Documento
+Questo Manuale Tecnico fornisce una vista approfondita sull’architettura software e sui meccanismi di funzionamento di TheKnife, con particolare attenzione a:
+
+Struttura dei package.
+
+Classi principali (modelli, logica di business, interfaccia).
+
+Metodologie di lettura/scrittura su file (CSV).
+
+Gestione degli utenti e delle recensioni.
+
+Possibili estensioni future.
+
+2. Architettura Software
+2.1 Suddivisione in Package
+theknife:
+
+Classi di modello: Ristorante, Utente, Recensione.
+
+Classe GestoreFile: metodi statici per leggere/scrivere CSV.
+
+theknife.gui:
+
+MainApp (con main(String[] args)), avvia la GUI.
+
+FancyFrame: finestra principale (usa un CardLayout al centro, e menu laterale).
+
+LoginDialog e RegisterDialog: finestre di dialogo modali per login/registrazione.
+
+GradientPanel: pannello che disegna un gradiente come background.
+
+theknife.gui.panels: pannelli specializzati: HomePanel, SearchPanel, RistorantiPanel, RecensioniPanel, PreferitiPanel.
+
+2.2 Flusso Principale
+main: La classe MainApp imposta NimbusLookAndFeel e crea un’istanza di FancyFrame.
+
+FancyFrame: Crea un layout a 2 colonne: menu laterale (GridLayout) + un centerPanel (CardLayout).
+
+In base al pulsante cliccato (Home, Ricerca, Ristoranti, ecc.), chiama showCard(...) che visualizza un pannello specifico.
+
+Se l’utente non è loggato (utenteCorrente == null), certe sezioni (es. Recensioni) avvisano che serve il login.
+
+Interazione:
+
+Registrazione e login: salvano/caricano da utenti.csv.
+
+Ristoranti: in RistorantiPanel, caricamento/salvataggio in ristoranti.csv.
+
+Recensioni: in RecensioniPanel, con recensioni.csv.
+
+Preferiti: in preferiti.csv.
+
+Ricerca: SearchPanel chiama GestoreFile.cercaRistoranti(...) per filtrare i ristoranti.
+
+2.3 Vantaggi dell’Architettura
+Separazione dei compiti: i pannelli di interfaccia (panel.*) sono slegati dalla logica di caricamento (posta in GestoreFile).
+
+Modularità: ogni blocco (utenti, ristoranti, recensioni) ha i propri metodi di I/O.
+
+Scalabilità: si possono aggiungere nuovi ruoli (es. “admin”), nuovi pannelli, ecc.
+
+3. Strutture Dati
+3.1 Modello Ristorante
+java
+Copia
+Modifica
+public class Ristorante {
+    private String nome;
+    private String citta;
+    // ...
+    private double fasciaPrezzo;
+    private boolean delivery;
+    // ...
+}
+Viene popolato leggendo ogni riga di ristoranti.csv e convertendo i campi stringa in double, boolean, ecc.
+
+3.2 Modello Utente
+java
+Copia
+Modifica
+public class Utente {
+    private String username;
+    private String passwordCifrata;
+    private String ruolo; // "cliente" o "ristoratore"
+    // ...
+}
+Utilizzato in fase di login e registrazione.
+
+3.3 Modello Recensione
+java
+Copia
+Modifica
+public class Recensione {
+    private String idRistorante;
+    private String username;
+    private int stelle;
+    private String testo;
+    private String risposta; // se ristoratore risponde
+}
+Facilita la manipolazione di informazioni su ogni recensione. Salvate su recensioni.csv.
+
+3.4 File CSV
+Ognuno ha una riga di intestazione e tante righe “dati”. Le funzioni in GestoreFile fanno .split(";") per estrarre i campi.
+
+4. Gestione Files in GestoreFile
+GestoreFile usa un approccio standard:
+
+caricaXxx(...): apre il CSV, legge l’intestazione (ignorata), quindi per ogni riga crea l’oggetto appropriato e lo aggiunge a una List.
+
+salvaXxx(...): scrive l’intestazione e poi scorre la lista di oggetti per scrivere i valori, separati da ;.
+
+Oltre a questi, esistono funzioni di aggiunta rapida (es. aggiungiRistorante(...)) che leggono i ristoranti attuali, aggiungono uno nuovo, e riscrivono il file. Lo stesso pattern vale per aggiungiUtente, aggiungiRecensione, ecc.
+
+4.1 Metodo di Ricerca
+cercaRistoranti(...) filtra i ristoranti caricati da ristoranti.csv secondo parametri come città, cucina, prezzo max, delivery, prenotazione. Se un parametro è null/vuoto, non si filtra su quello. Restituisce una List<Ristorante> che corrisponde ai criteri.
+
+5. Interfaccia Grafica (GUI)
+5.1 FancyFrame
+CardLayout al centro per gestire diversi pannelli (Home, Search, Ristoranti, Recensioni, Preferiti).
+
+Pulsante “Login/Logout”: se non c’è utenteCorrente, appare “Login”. Al click mostra LoginDialog; se l’utente si logga, utenteCorrente viene valorizzato. Poi il pulsante diventa “Logout”.
+
+5.2 I Pannelli Principali
+HomePanel: testo di benvenuto.
+
+SearchPanel: campi per filtrare ristoranti e un bottone “Cerca”.
+
+RistorantiPanel: l’utente ristoratore può aggiungere ristoranti.
+
+RecensioniPanel: l’utente cliente può inserire/modificare/eliminare le proprie recensioni, e l’utente ristoratore può rispondere.
+
+PreferitiPanel: l’utente cliente può gestire una lista di preferiti.
+
+5.3 Finestre di Dialogo
+LoginDialog: inserisci username/password. Se validi, setta utenteCorrente in FancyFrame.
+
+RegisterDialog: crea un nuovo utente e salva su utenti.csv. Permette di scegliere “cliente” o “ristoratore”.
+
+6. Sicurezza e Limitazioni
+Password: nel prototipo, le password sono salvate in chiaro su CSV. In un sistema reale andrebbero cifrate (hash + salt).
+
+Autorizzazioni: il prototipo non controlla, ad esempio, la “proprietà” di un ristorante. Nella pratica, andrebbe aggiunto un campo “proprietario” su Ristorante e controllare che solo tale proprietario possa rispondere alle recensioni.
+
+Concorrente: non è gestito l’accesso concorrente ai file. L’applicazione è pensata come esercizio didattico su file CSV.
+
+7. Estensioni Future
+Autenticazione più sicura (hash password, token).
+
+Gestione concurrency: blocco file o migrazione a un database relazionale.
+
+Verifica della “proprietà” dei ristoranti.
+
+Interfaccia web con un server back-end, abbandonando i file CSV.
+
+8. Conclusione
+Il Manuale Tecnico delinea l’architettura a pacchetti, l’approccio a CSV, la logica in GestoreFile e la struttura modulare dei pannelli GUI. La suddivisione chiara e l’uso di Java semplificano l’estensione del progetto, conforme alle Specifiche di Progetto “TheKnife”.

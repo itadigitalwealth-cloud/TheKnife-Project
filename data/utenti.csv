@@ -1,0 +1,7 @@
+Nome;Cognome;Username;Password;DataNascita;Domicilio;Ruolo
+Mario;Rossi;mrossi;1234;1990-01-01;Milano;cliente
+Anna;Bianchi;abianchi;aaa;1985-06-10;Como;ristoratore
+matteo;vigano;matteo;12;;;cliente
+matteo;vigano;mat;12;;;cliente
+matteo;vigano;ma;12;;;ristoratore
+soc;vsd;socio;12;;;cliente
