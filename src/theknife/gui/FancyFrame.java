@@ -23,7 +23,6 @@ public class FancyFrame extends JFrame {
     private JPanel centerPanel;
     private Utente utenteCorrente;
 
-    // Pannelli di contenuto
     private HomePanel homePanel;
     private SearchPanel searchPanel;
     private RistorantiPanel ristorantiPanel;
@@ -42,15 +41,12 @@ public class FancyFrame extends JFrame {
     private void initGUI() {
         setLayout(new BorderLayout());
 
-        // 1. Top Bar: Pannello semplice con colore fisso e logo
         JPanel topBar = new JPanel(new BorderLayout());
-        topBar.setBackground(new Color(0, 102, 204)); // colore blu uniforme
+        topBar.setBackground(new Color(0, 102, 204));
         topBar.setPreferredSize(new Dimension(0, 80));
 
-        // Logo: prova a caricare "logo.png" dal classpath; se non trovato, usa un'etichetta di default
         ImageIcon logoIcon = null;
         try {
-            // Assicurati che logo.png sia nel percorso corretto, ad esempio in src/resources/
             logoIcon = new ImageIcon(getClass().getResource("/logo.png"));
         } catch(Exception e) {
             System.out.println("Logo non trovato, uso testo di default.");
@@ -67,7 +63,6 @@ public class FancyFrame extends JFrame {
         }
         topBar.add(logoLabel, BorderLayout.WEST);
 
-        // Titolo
         JLabel title = new JLabel(" TheKnife ");
         title.setFont(new Font("Segoe UI", Font.BOLD, 30));
         title.setForeground(Color.WHITE);
@@ -75,9 +70,7 @@ public class FancyFrame extends JFrame {
 
         add(topBar, BorderLayout.NORTH);
 
-        // 2. Barra dei menu a tendina (JMenuBar)
         JMenuBar menuBar = new JMenuBar();
-        // Imposta colori e font per maggiore visibilità
         menuBar.setBackground(new Color(0, 102, 204));
         menuBar.setForeground(Color.WHITE);
         menuBar.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -86,7 +79,6 @@ public class FancyFrame extends JFrame {
         menuNaviga.setForeground(Color.WHITE);
         menuNaviga.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        // Voci di menu
         JMenuItem miHome = new JMenuItem("Home");
         JMenuItem miSearch = new JMenuItem("Ricerca");
         JMenuItem miRistoranti = new JMenuItem("Miei Ristoranti");
@@ -94,7 +86,6 @@ public class FancyFrame extends JFrame {
         JMenuItem miPreferiti = new JMenuItem("Preferiti");
         JMenuItem miLoginLogout = new JMenuItem("Login");
 
-        // Imposta stile per ogni voce
         for (JMenuItem item : new JMenuItem[]{miHome, miSearch, miRistoranti, miRecensioni, miPreferiti, miLoginLogout}) {
             item.setFont(new Font("Segoe UI", Font.PLAIN, 14));
             item.setForeground(Color.BLACK);
@@ -112,7 +103,6 @@ public class FancyFrame extends JFrame {
 
         setJMenuBar(menuBar);
 
-        // 3. Center Panel con CardLayout per i vari pannelli
         cardLayout = new CardLayout();
         centerPanel = new JPanel(cardLayout);
 
@@ -132,7 +122,6 @@ public class FancyFrame extends JFrame {
 
         add(centerPanel, BorderLayout.CENTER);
 
-        // 4. Azioni per i JMenuItem
         miHome.addActionListener(e -> showCard(CARD_HOME));
 
         miSearch.addActionListener(e -> {
@@ -141,7 +130,7 @@ public class FancyFrame extends JFrame {
         });
 
         miRistoranti.addActionListener(e -> {
-            if (!isLoggedIn() || !"ristoratore".equalsIgnoreCase(utenteCorrente.getRuolo())) {
+            if (!isLoggedIn() || !utenteCorrente.isRistoratore()) {
                 JOptionPane.showMessageDialog(this,
                         "Devi essere loggato come ristoratore!",
                         "Attenzione", JOptionPane.WARNING_MESSAGE);
@@ -163,7 +152,7 @@ public class FancyFrame extends JFrame {
         });
 
         miPreferiti.addActionListener(e -> {
-            if (!isLoggedIn() || !"cliente".equalsIgnoreCase(utenteCorrente.getRuolo())) {
+            if (!isLoggedIn() || !utenteCorrente.isCliente()) {
                 JOptionPane.showMessageDialog(this,
                         "Devi essere loggato come cliente!",
                         "Attenzione", JOptionPane.WARNING_MESSAGE);

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * - recensioni (5 campi)
  * - preferiti (2 campi)
  * - cercaRistoranti(...) con nomeParziale, citta, tipoCucina, maxPrezzo,
- * delivery, prenotazione
+ *   delivery, prenotazione
  */
 public class GestoreFile {
     private static final String SEP = ";";
@@ -31,19 +31,11 @@ public class GestoreFile {
                 String[] c = line.split(SEP);
                 if (c.length < 7)
                     continue;
-                Utente u = new Utente(
-                        c[0], // nome
-                        c[1], // cognome
-                        c[2], // username
-                        c[3], // password
-                        c[4], // dataNascita
-                        c[5], // domicilio
-                        c[6] // ruolo
-                );
+                Utente u = new Utente(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
                 lista.add(u);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nella lettura del file utenti: " + e.getMessage());
         }
         return lista;
     }
@@ -52,33 +44,21 @@ public class GestoreFile {
         try (PrintWriter pw = new PrintWriter(new FileWriter(percorso))) {
             pw.println("Nome;Cognome;Username;Password;DataNascita;Domicilio;Ruolo");
             for (Utente u : utenti) {
-                pw.println(
-                        u.getNome() + SEP +
-                                u.getCognome() + SEP +
-                                u.getUsername() + SEP +
-                                u.getPasswordCifrata() + SEP +
-                                u.getDataNascita() + SEP +
-                                u.getDomicilio() + SEP +
-                                u.getRuolo());
+                pw.println(u.getNome() + SEP + u.getCognome() + SEP + u.getUsername() + SEP +
+                        u.getPasswordCifrata() + SEP + u.getDataNascita() + SEP +
+                        u.getDomicilio() + SEP + u.getRuolo());
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nel salvataggio del file utenti: " + e.getMessage());
         }
     }
 
-    // se vogliamo fare un check di duplicati
     public static boolean usernameEsistente(String username, String percorso) {
-        List<Utente> tutti = caricaUtenti(percorso);
-        for (Utente u : tutti) {
-            if (u.getUsername().equalsIgnoreCase(username)) {
-                return true;
-            }
-        }
-        return false;
+        return caricaUtenti(percorso).stream()
+                .anyMatch(u -> u.getUsername().equalsIgnoreCase(username));
     }
 
     public static void aggiungiUtente(Utente u, String percorso) {
-        // se duplicato, gestiscilo
         if (usernameEsistente(u.getUsername(), percorso)) {
             System.out.println("ERRORE: username " + u.getUsername() + " già esistente!");
             return;
@@ -102,51 +82,42 @@ public class GestoreFile {
                 String[] c = line.split(SEP);
                 if (c.length < 11)
                     continue;
-                Ristorante r = new Ristorante(
-                        c[0], // nome
-                        c[1], // nazione
-                        c[2], // citta
-                        c[3], // indirizzo
-                        Double.parseDouble(c[4]),
-                        Double.parseDouble(c[5]),
-                        Double.parseDouble(c[6]),
-                        "si".equalsIgnoreCase(c[7]),
-                        "si".equalsIgnoreCase(c[8]),
-                        c[9],
-                        c[10] // proprietario
-                );
+                Ristorante r = new Ristorante(c[0], c[1], c[2], c[3],
+                        Double.parseDouble(c[4]), Double.parseDouble(c[5]),
+                        Double.parseDouble(c[6]), "si".equalsIgnoreCase(c[7]),
+                        "si".equalsIgnoreCase(c[8]), c[9], c[10]);
                 lista.add(r);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nella lettura del file ristoranti: " + e.getMessage());
         }
         return lista;
     }
 
+    public static boolean ristoranteEsistente(String nome, String percorso) {
+        return caricaRistoranti(percorso).stream()
+                .anyMatch(r -> r.getNome().equalsIgnoreCase(nome));
+    }
+
     public static void salvaRistoranti(List<Ristorante> list, String percorso) {
         try (PrintWriter pw = new PrintWriter(new FileWriter(percorso))) {
-            pw.println(
-                    "Nome;Nazione;Citta;Indirizzo;Latitudine;Longitudine;FasciaPrezzo;Delivery;Prenotazione;TipoCucina;Proprietario");
+            pw.println("Nome;Nazione;Citta;Indirizzo;Latitudine;Longitudine;FasciaPrezzo;Delivery;Prenotazione;TipoCucina;Proprietario");
             for (Ristorante r : list) {
-                pw.println(
-                        r.getNome() + SEP +
-                                r.getNazione() + SEP +
-                                r.getCitta() + SEP +
-                                r.getIndirizzo() + SEP +
-                                r.getLatitudine() + SEP +
-                                r.getLongitudine() + SEP +
-                                r.getFasciaPrezzo() + SEP +
-                                (r.isDelivery() ? "si" : "no") + SEP +
-                                (r.isPrenotazione() ? "si" : "no") + SEP +
-                                r.getTipoCucina() + SEP +
-                                (r.getProprietario() != null ? r.getProprietario() : ""));
+                pw.println(r.getNome() + SEP + r.getNazione() + SEP + r.getCitta() + SEP + r.getIndirizzo() + SEP +
+                        r.getLatitudine() + SEP + r.getLongitudine() + SEP + r.getFasciaPrezzo() + SEP +
+                        (r.isDelivery() ? "si" : "no") + SEP + (r.isPrenotazione() ? "si" : "no") + SEP +
+                        r.getTipoCucina() + SEP + (r.getProprietario() != null ? r.getProprietario() : ""));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nel salvataggio del file ristoranti: " + e.getMessage());
         }
     }
 
     public static void aggiungiRistorante(Ristorante r, String percorso) {
+        if (ristoranteEsistente(r.getNome(), percorso)) {
+            System.out.println("ERRORE: ristorante " + r.getNome() + " già esistente!");
+            return;
+        }
         List<Ristorante> lista = caricaRistoranti(percorso);
         lista.add(r);
         salvaRistoranti(lista, percorso);
@@ -166,17 +137,11 @@ public class GestoreFile {
                 String[] c = line.split(SEP);
                 if (c.length < 5)
                     continue;
-                Recensione rec = new Recensione(
-                        c[0], // ristorante
-                        c[1], // username
-                        Integer.parseInt(c[2]),
-                        c[3], // testo
-                        c[4] // risposta
-                );
+                Recensione rec = new Recensione(c[0], c[1], Integer.parseInt(c[2]), c[3], c[4]);
                 lista.add(rec);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nella lettura del file recensioni: " + e.getMessage());
         }
         return lista;
     }
@@ -185,15 +150,11 @@ public class GestoreFile {
         try (PrintWriter pw = new PrintWriter(new FileWriter(percorso))) {
             pw.println("IdRistorante;Username;Stelle;Testo;Risposta");
             for (Recensione r : recs) {
-                pw.println(
-                        r.getIdRistorante() + SEP +
-                                r.getUsername() + SEP +
-                                r.getStelle() + SEP +
-                                r.getTesto() + SEP +
-                                (r.getRisposta() != null ? r.getRisposta() : ""));
+                pw.println(r.getIdRistorante() + SEP + r.getUsername() + SEP + r.getStelle() + SEP +
+                        r.getTesto() + SEP + (r.getRisposta() != null ? r.getRisposta() : ""));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nel salvataggio del file recensioni: " + e.getMessage());
         }
     }
 
@@ -204,7 +165,7 @@ public class GestoreFile {
     }
 
     public static void modificaRecensione(String percorso, String user, String idRisto,
-            String nuovoTesto, int nuoveStelle) {
+                                          String nuovoTesto, int nuoveStelle) {
         List<Recensione> list = caricaRecensioni(percorso);
         for (Recensione r : list) {
             if (r.getUsername().equalsIgnoreCase(user)
@@ -242,7 +203,7 @@ public class GestoreFile {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nella lettura dei preferiti: " + e.getMessage());
         }
         return result;
     }
@@ -254,7 +215,7 @@ public class GestoreFile {
                 pw.println(row[0] + SEP + row[1]);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Errore nel salvataggio dei preferiti: " + e.getMessage());
         }
     }
 
@@ -271,10 +232,16 @@ public class GestoreFile {
                         righe.add(c);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Errore nella lettura dei preferiti: " + e.getMessage());
             }
         }
-        righe.add(new String[] { username, risto });
+        // evita duplicati
+        boolean giaPresente = righe.stream()
+                .anyMatch(row -> row[0].equalsIgnoreCase(username)
+                        && row[1].equalsIgnoreCase(risto));
+        if (!giaPresente) {
+            righe.add(new String[]{username, risto});
+        }
         salvaPreferiti(percorso, righe);
     }
 
@@ -292,7 +259,7 @@ public class GestoreFile {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Errore nella lettura dei preferiti: " + e.getMessage());
             }
         }
         righe.removeIf(row -> row[0].equalsIgnoreCase(username)
@@ -301,52 +268,27 @@ public class GestoreFile {
     }
 
     // ------- RICERCA -------
-    /**
-     * Filtra i ristoranti in base a:
-     * - nomeParziale (String)
-     * - citta (String)
-     * - tipoCucina (String)
-     * - maxPrezzo (Double)
-     * - delivery (Boolean)
-     * - prenotazione (Boolean)
-     */
     public static List<Ristorante> cercaRistoranti(String percorso,
-            String nomeParziale,
-            String citta,
-            String tipoCucina,
-            Double maxPrezzo,
-            Boolean delivery,
-            Boolean prenotazione) {
-        List<Ristorante> all = caricaRistoranti(percorso);
+                                               String nomeParziale,
+                                               String citta,
+                                               String tipoCucina,
+                                               Double maxPrezzo,
+                                               Boolean delivery,
+                                               Boolean prenotazione) {
+    return caricaRistoranti(percorso).stream().filter(r -> {
+        if (nomeParziale != null && !nomeParziale.isEmpty() &&
+            !r.getNome().toLowerCase().contains(nomeParziale.toLowerCase())) return false;
+        if (citta != null && !citta.isEmpty() &&
+            !r.getCitta().toLowerCase().contains(citta.toLowerCase())) return false;
+        if (tipoCucina != null && !tipoCucina.isEmpty() &&
+            !r.getTipoCucina().toLowerCase().contains(tipoCucina.toLowerCase())) return false;
+        if (maxPrezzo != null && r.getFasciaPrezzo() > maxPrezzo) return false;
+        if (delivery != null && delivery && !r.isDelivery()) return false;
+        if (prenotazione != null && prenotazione && !r.isPrenotazione()) return false;        
+        return true;
+    }).collect(Collectors.toList());
+}
 
-        return all.stream().filter(r -> {
-            if (nomeParziale != null && !nomeParziale.isEmpty()) {
-                if (!r.getNome().toLowerCase().contains(nomeParziale.toLowerCase()))
-                    return false;
-            }
-            if (citta != null && !citta.isEmpty()) {
-                if (!r.getCitta().equalsIgnoreCase(citta))
-                    return false;
-            }
-            if (tipoCucina != null && !tipoCucina.isEmpty()) {
-                if (!r.getTipoCucina().equalsIgnoreCase(tipoCucina))
-                    return false;
-            }
-            if (maxPrezzo != null && maxPrezzo > 0) {
-                if (r.getFasciaPrezzo() > maxPrezzo)
-                    return false;
-            }
-            if (delivery != null) {
-                if (r.isDelivery() != delivery)
-                    return false;
-            }
-            if (prenotazione != null) {
-                if (r.isPrenotazione() != prenotazione)
-                    return false;
-            }
-            return true;
-        }).collect(Collectors.toList());
-    }
 
     public static double calcolaMediaStelle(String percorsoRecensioni, String nomeRisto) {
         List<Recensione> recs = caricaRecensioni(percorsoRecensioni);
@@ -356,10 +298,7 @@ public class GestoreFile {
         if (filtrate.isEmpty())
             return 0.0;
 
-        double somma = 0.0;
-        for (Recensione r : filtrate) {
-            somma += r.getStelle();
-        }
+        double somma = filtrate.stream().mapToInt(Recensione::getStelle).sum();
         return somma / filtrate.size();
     }
 }

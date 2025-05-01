@@ -1,14 +1,13 @@
 package theknife.gui.panels;
 
-import theknife.Ristorante;
-import theknife.Recensione;
-import theknife.GestoreFile;
-import theknife.gui.FancyFrame;
-import theknife.gui.GradientPanel;
-
-import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import javax.swing.*;
+import theknife.GestoreFile;
+import theknife.Recensione;
+import theknife.Ristorante;
+import theknife.gui.FancyFrame;
+import theknife.gui.GradientPanel;
 
 /**
  * Mostra i dettagli di UN singolo ristorante e le sue recensioni.
@@ -36,6 +35,7 @@ public class RestaurantDetailPanel extends GradientPanel {
 
         textArea = new JTextArea();
         textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
         add(new JScrollPane(textArea), BorderLayout.CENTER);
 
         JPanel bot = new JPanel();
@@ -44,10 +44,7 @@ public class RestaurantDetailPanel extends GradientPanel {
 
         add(bot, BorderLayout.SOUTH);
 
-        btnIndietro.addActionListener(e -> {
-            // Torna al panel Ricerca per default
-            parent.showCard(FancyFrame.CARD_SEARCH);
-        });
+        btnIndietro.addActionListener(e -> parent.showCard(FancyFrame.CARD_SEARCH));
     }
 
     public void setRistorante(Ristorante r) {
@@ -60,14 +57,15 @@ public class RestaurantDetailPanel extends GradientPanel {
             textArea.setText("Nessun ristorante selezionato.");
             return;
         }
+
         StringBuilder sb = new StringBuilder();
         sb.append("Nome: ").append(ristoranteCorrente.getNome()).append("\n");
-        sb.append("Citta: ").append(ristoranteCorrente.getCitta()).append("\n");
+        sb.append("Città: ").append(ristoranteCorrente.getCitta()).append("\n");
         sb.append("Nazione: ").append(ristoranteCorrente.getNazione()).append("\n");
         sb.append("Indirizzo: ").append(ristoranteCorrente.getIndirizzo()).append("\n");
-        sb.append("Fascia Prezzo: ").append(ristoranteCorrente.getFasciaPrezzo()).append("\n");
-        sb.append("Delivery: ").append(ristoranteCorrente.isDelivery() ? "si" : "no").append("\n");
-        sb.append("Prenotazione: ").append(ristoranteCorrente.isPrenotazione() ? "si" : "no").append("\n");
+        sb.append("Fascia Prezzo: ").append(ristoranteCorrente.getFasciaPrezzo()).append(" €\n");
+        sb.append("Delivery: ").append(ristoranteCorrente.isDelivery() ? "sì" : "no").append("\n");
+        sb.append("Prenotazione: ").append(ristoranteCorrente.isPrenotazione() ? "sì" : "no").append("\n");
         sb.append("Tipo Cucina: ").append(ristoranteCorrente.getTipoCucina()).append("\n");
         sb.append("Proprietario: ").append(ristoranteCorrente.getProprietario()).append("\n");
 

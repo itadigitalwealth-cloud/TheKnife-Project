@@ -17,8 +17,8 @@ public class Utente {
     }
 
     public Utente(String nome, String cognome, String username,
-            String passwordCifrata, String dataNascita,
-            String domicilio, String ruolo) {
+                  String passwordCifrata, String dataNascita,
+                  String domicilio, String ruolo) {
         this.nome = nome;
         this.cognome = cognome;
         this.username = username;
@@ -82,5 +82,25 @@ public class Utente {
 
     public void setRuolo(String ruolo) {
         this.ruolo = ruolo;
+    }
+
+    public boolean isCliente() {
+        return "cliente".equalsIgnoreCase(ruolo);
+    }
+
+    public boolean isRistoratore() {
+        return "ristoratore".equalsIgnoreCase(ruolo);
+    }
+
+    @Override
+    public String toString() {
+        return "Utente{" +
+                "nome='" + nome + '\'' +
+                ", cognome='" + cognome + '\'' +
+                ", username='" + username + '\'' +
+                ", dataNascita='" + dataNascita + '\'' +
+                ", domicilio='" + domicilio + '\'' +
+                ", ruolo='" + ruolo + '\'' +
+                '}';
     }
 }

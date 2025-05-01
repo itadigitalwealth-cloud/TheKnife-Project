@@ -21,10 +21,10 @@ public class Ristorante {
     }
 
     public Ristorante(String nome, String nazione, String citta,
-            String indirizzo, double lat, double lon,
-            double fasciaPrezzo, boolean delivery,
-            boolean prenotazione, String tipoCucina,
-            String proprietario) {
+                      String indirizzo, double lat, double lon,
+                      double fasciaPrezzo, boolean delivery,
+                      boolean prenotazione, String tipoCucina,
+                      String proprietario) {
         this.nome = nome;
         this.nazione = nazione;
         this.citta = citta;
@@ -125,4 +125,21 @@ public class Ristorante {
     public void setProprietario(String proprietario) {
         this.proprietario = proprietario;
     }
-}
+
+    @Override
+    public String toString() {
+        return "Ristorante{" +
+                "nome='" + nome + '\'' +
+                ", nazione='" + nazione + '\'' +
+                ", citta='" + citta + '\'' +
+                ", indirizzo='" + indirizzo + '\'' +
+                ", latitudine=" + latitudine +
+                ", longitudine=" + longitudine +
+                ", fasciaPrezzo=" + fasciaPrezzo +
+                ", delivery=" + delivery +
+                ", prenotazione=" + prenotazione +
+                ", tipoCucina='" + tipoCucina + '\'' +
+                ", proprietario='" + proprietario + '\'' +
+                '}';
+    }
+} 

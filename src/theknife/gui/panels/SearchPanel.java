@@ -1,13 +1,12 @@
 package theknife.gui.panels;
 
-import theknife.Ristorante;
-import theknife.GestoreFile;
-import theknife.gui.FancyFrame;
-import theknife.gui.GradientPanel;
-
-import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import javax.swing.*;
+import theknife.GestoreFile;
+import theknife.Ristorante;
+import theknife.gui.FancyFrame;
+import theknife.gui.GradientPanel;
 
 public class SearchPanel extends GradientPanel {
     private FancyFrame parent;
@@ -77,9 +76,11 @@ public class SearchPanel extends GradientPanel {
             try {
                 maxPrezzo = Double.parseDouble(txtPrezzo.getText().trim());
             } catch (NumberFormatException ex) {
-                maxPrezzo = null;
+                JOptionPane.showMessageDialog(this, "Prezzo massimo non valido.", "Errore", JOptionPane.ERROR_MESSAGE);
+                return;
             }
         }
+
         Boolean del = chkDelivery.isSelected();
         Boolean pren = chkPrenotazione.isSelected();
 
@@ -94,10 +95,11 @@ public class SearchPanel extends GradientPanel {
 
         if (risultati.isEmpty()) {
             JLabel lblNo = new JLabel("Nessun ristorante trovato con i filtri selezionati.");
+            lblNo.setAlignmentX(Component.LEFT_ALIGNMENT);
             resultsPanel.add(lblNo);
         } else {
             for (Ristorante r : risultati) {
-                JButton btn = new JButton(r.getNome());
+                JButton btn = new JButton(r.getNome() + " - " + r.getCitta() + " - " + r.getTipoCucina());
                 btn.setAlignmentX(Component.LEFT_ALIGNMENT);
                 btn.addActionListener(ev -> {
                     parent.getDetailPanel().setRistorante(r);
@@ -111,6 +113,14 @@ public class SearchPanel extends GradientPanel {
     }
 
     public void refresh() {
-        // se vuoi svuotare i filtri ogni volta, falli qui
+        txtNome.setText("");
+        txtCitta.setText("");
+        txtCucina.setText("");
+        txtPrezzo.setText("");
+        chkDelivery.setSelected(false);
+        chkPrenotazione.setSelected(false);
+        resultsPanel.removeAll();
+        resultsPanel.revalidate();
+        resultsPanel.repaint();
     }
 }

@@ -14,10 +14,10 @@ public class Recensione {
     }
 
     public Recensione(String idRistorante, String username,
-            int stelle, String testo, String risposta) {
+                      int stelle, String testo, String risposta) {
         this.idRistorante = idRistorante;
         this.username = username;
-        this.stelle = stelle;
+        setStelle(stelle); // validazione applicata
         this.testo = testo;
         this.risposta = risposta;
     }
@@ -43,6 +43,8 @@ public class Recensione {
     }
 
     public void setStelle(int stelle) {
+        if (stelle < 1 || stelle > 5)
+            throw new IllegalArgumentException("Il numero di stelle deve essere tra 1 e 5.");
         this.stelle = stelle;
     }
 
@@ -60,5 +62,20 @@ public class Recensione {
 
     public void setRisposta(String risposta) {
         this.risposta = risposta;
+    }
+
+    public boolean hasRisposta() {
+        return risposta != null && !risposta.trim().isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "Recensione{" +
+                "idRistorante='" + idRistorante + '\'' +
+                ", username='" + username + '\'' +
+                ", stelle=" + stelle +
+                ", testo='" + testo + '\'' +
+                ", risposta='" + risposta + '\'' +
+                '}';
     }
 }

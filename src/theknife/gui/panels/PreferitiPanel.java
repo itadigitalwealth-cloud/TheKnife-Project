@@ -1,12 +1,11 @@
 package theknife.gui.panels;
 
+import java.awt.*;
+import java.util.List;
+import javax.swing.*;
 import theknife.*;
 import theknife.gui.FancyFrame;
 import theknife.gui.GradientPanel;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.List;
 
 public class PreferitiPanel extends GradientPanel {
 
@@ -28,6 +27,7 @@ public class PreferitiPanel extends GradientPanel {
 
         textArea = new JTextArea();
         textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
         add(new JScrollPane(textArea), BorderLayout.CENTER);
 
         JPanel bottom = new JPanel();
@@ -48,27 +48,26 @@ public class PreferitiPanel extends GradientPanel {
             return;
         }
         Utente u = parent.getUtenteCorrente();
-        if (!"cliente".equalsIgnoreCase(u.getRuolo())) {
+        if (!u.isCliente()) {
             textArea.setText("Sei ristoratore, niente preferiti!");
             return;
         }
         List<String> lista = GestoreFile.caricaPreferiti("data/preferiti.csv", u.getUsername());
-        textArea.setText("=== I Miei Preferiti ===\\n");
+        textArea.setText("=== I Miei Preferiti ===\n");
         for (String nomeRisto : lista) {
-            textArea.append(nomeRisto + "\\n");
+            textArea.append(nomeRisto + "\n");
         }
     }
 
     private void aggiungiPreferito() {
         Utente u = parent.getUtenteCorrente();
-        if (u == null || !"cliente".equalsIgnoreCase(u.getRuolo())) {
+        if (u == null || !u.isCliente()) {
             JOptionPane.showMessageDialog(this, "Devi essere un cliente!", "Errore", JOptionPane.ERROR_MESSAGE);
             return;
         }
         List<Ristorante> ristos = GestoreFile.caricaRistoranti("data/ristoranti.csv");
         if (ristos.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nessun ristorante disponibile!", "Info",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Nessun ristorante disponibile!", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         String[] nomi = ristos.stream().map(Ristorante::getNome).toArray(String[]::new);
@@ -85,18 +84,16 @@ public class PreferitiPanel extends GradientPanel {
 
     private void rimuoviPreferito() {
         Utente u = parent.getUtenteCorrente();
-        if (u == null || !"cliente".equalsIgnoreCase(u.getRuolo())) {
+        if (u == null || !u.isCliente()) {
             JOptionPane.showMessageDialog(this, "Devi essere un cliente!", "Errore", JOptionPane.ERROR_MESSAGE);
             return;
         }
         List<String> lista = GestoreFile.caricaPreferiti("data/preferiti.csv", u.getUsername());
         if (lista.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Non hai ristoranti preferiti!", "Info",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Non hai ristoranti preferiti!", "Info", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        String[] arr = lista.toArray(new String[0]);
-        JComboBox<String> combo = new JComboBox<>(arr);
+        JComboBox<String> combo = new JComboBox<>(lista.toArray(new String[0]));
 
         int opt = JOptionPane.showConfirmDialog(this, combo,
                 "Rimuovi Preferito", JOptionPane.OK_CANCEL_OPTION);

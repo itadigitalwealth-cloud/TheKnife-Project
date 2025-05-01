@@ -1,11 +1,12 @@
 package theknife.gui;
 
-import theknife.Utente;
-import theknife.GestoreFile;
-
-import javax.swing.*;
 import java.awt.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import javax.swing.*;
+import theknife.GestoreFile;
+import theknife.Utente;
 
 /**
  * Finestra di login:
@@ -33,7 +34,7 @@ public class LoginDialog extends JDialog {
         JLabel lblRole = new JLabel("Ruolo:");
         JTextField txtUser = new JTextField(15);
         JPasswordField txtPass = new JPasswordField(15);
-        JComboBox<String> comboRole = new JComboBox<>(new String[] { "cliente", "ristoratore" });
+        JComboBox<String> comboRole = new JComboBox<>(new String[]{"cliente", "ristoratore"});
 
         JButton btnLogin = new JButton("Login");
         JButton btnCancel = new JButton("Cancel");
@@ -43,21 +44,18 @@ public class LoginDialog extends JDialog {
         gbc.gridy = 0;
         add(lblUser, gbc);
         gbc.gridx = 1;
-        gbc.gridy = 0;
         add(txtUser, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
         add(lblPass, gbc);
         gbc.gridx = 1;
-        gbc.gridy = 1;
         add(txtPass, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
         add(lblRole, gbc);
         gbc.gridx = 1;
-        gbc.gridy = 2;
         add(comboRole, gbc);
 
         JPanel panButtons = new JPanel();
@@ -74,7 +72,8 @@ public class LoginDialog extends JDialog {
             String user = txtUser.getText().trim();
             String pass = new String(txtPass.getPassword()).trim();
             String role = (String) comboRole.getSelectedItem();
-            Utente u = effettuaLogin(user, pass, role);
+            String passCifrata = cifraPassword(pass);
+            Utente u = effettuaLogin(user, passCifrata, role);
             if (u != null) {
                 utenteLoggato = u;
                 dispose();
@@ -98,15 +97,30 @@ public class LoginDialog extends JDialog {
         return utenteLoggato;
     }
 
-    private Utente effettuaLogin(String username, String password, String ruoloRichiesto) {
+    private Utente effettuaLogin(String username, String passwordCifrata, String ruoloRichiesto) {
         List<Utente> utenti = GestoreFile.caricaUtenti("data/utenti.csv");
         for (Utente u : utenti) {
             if (u.getUsername().equalsIgnoreCase(username)
-                    && u.getPasswordCifrata().equals(password)
+                    && u.getPasswordCifrata().equals(passwordCifrata)
                     && u.getRuolo().equalsIgnoreCase(ruoloRichiesto)) {
                 return u;
             }
         }
         return null; // se non trovato
+    }
+
+    private String cifraPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return password;
+        }
     }
 }

@@ -1,13 +1,12 @@
 package theknife.gui.panels;
 
-import theknife.*;
-import theknife.gui.FancyFrame;
-import theknife.gui.GradientPanel;
-
-import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.swing.*;
+import theknife.*;
+import theknife.gui.FancyFrame;
+import theknife.gui.GradientPanel;
 
 public class RistorantiPanel extends GradientPanel {
 
@@ -46,7 +45,7 @@ public class RistorantiPanel extends GradientPanel {
         resultsPanel.removeAll();
 
         Utente u = parent.getUtenteCorrente();
-        if (u == null || !"ristoratore".equalsIgnoreCase(u.getRuolo())) {
+        if (u == null || !u.isRistoratore()) {
             JLabel lbl = new JLabel("Devi essere loggato come ristoratore.");
             resultsPanel.add(lbl);
             resultsPanel.revalidate();
@@ -64,11 +63,10 @@ public class RistorantiPanel extends GradientPanel {
             resultsPanel.add(lblNo);
         } else {
             for (Ristorante r : miei) {
-                JButton btn = new JButton(r.getNome());
+                JButton btn = new JButton(r.getNome() + " - " + r.getCitta() + " - " + r.getTipoCucina());
                 btn.setAlignmentX(Component.LEFT_ALIGNMENT);
 
                 btn.addActionListener(ev -> {
-                    // Al click, apri detail
                     parent.getDetailPanel().setRistorante(r);
                     parent.showCard(FancyFrame.CARD_DETAIL);
                 });
@@ -83,7 +81,7 @@ public class RistorantiPanel extends GradientPanel {
 
     private void mostraDialogNuovoRistorante() {
         Utente u = parent.getUtenteCorrente();
-        if (u == null || !"ristoratore".equalsIgnoreCase(u.getRuolo())) {
+        if (u == null || !u.isRistoratore()) {
             JOptionPane.showMessageDialog(this,
                     "Devi essere ristoratore loggato!",
                     "Errore", JOptionPane.ERROR_MESSAGE);
@@ -132,7 +130,7 @@ public class RistorantiPanel extends GradientPanel {
                         prezzo,
                         deliv, preno,
                         txtCucina.getText().trim(),
-                        u.getUsername() // proprietario
+                        u.getUsername()
                 );
                 GestoreFile.aggiungiRistorante(r, "data/ristoranti.csv");
                 refreshData();
