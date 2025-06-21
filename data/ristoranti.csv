@@ -1,4 +1,21 @@
 Nome;Nazione;Citta;Indirizzo;Latitudine;Longitudine;FasciaPrezzo;Delivery;Prenotazione;TipoCucina;Proprietario
-PizzeriaDaMario;Italia;Milano;Via Roma 10;45.0;9.0;15.0;si;no;Italiana;b
-SushiHouse;Italia;Como;Via Lago 1;45.8;9.1;30.0;no;si;Giapponese;b
-Teatro Sociale;Italia;Como;Via volta;0.0;0.0;90.0;no;si;Italiana;b
+LaCocinaDeSol;Spagna;Madrid;Calle Mayor 22;40.4169;-3.7036;25.0;si;si;Spagnola;azzor2
+GoldenDragon;Cina;Pechino;Dongzhimen Nei 88;39.9042;116.4074;40.0;si;si;Cinese;azzor2
+LeBistroParisien;Francia;Parigi;Rue Rivoli 101;48.8566;2.3522;50.0;no;si;Francese;alecicc
+BavarianBräuhaus;Germania;Monaco;Marienplatz 8;48.1351;11.5820;35.0;si;no;Tedesca;azzor2
+TacoLoco;Messico;Città del Messico;Avenida Reforma 200;19.4326;-99.1332;15.0;si;no;Messicana;alecicc
+CurryPalace;India;Nuova Delhi;Connaught Place 5;28.6139;77.2090;20.0;no;si;Indiana;alecicc
+AussieGrill;Australia;Sydney;George Street 55;-33.8688;151.2093;45.0;si;si;Australiana;alecicc
+NYBurgerJoint;USA;New York;Broadway 550;40.7128;-74.0060;30.0;si;si;Americana;azzor2
+SakuraSushi;Giappone;Tokyo;Shibuya 109;35.6895;139.6917;60.0;no;si;Giapponese;alecicc
+RioChurrasco;Brasile;Rio de Janeiro;Avenida Atlântica 1700;-22.9711;-43.1822;35.0;si;no;Brasiliana;alecicc
+NordicSeafood;Norvegia;Oslo;Karl Johans gate 15;59.9139;10.7522;55.0;no;si;Nordica;azzor2
+CapeTownGrill;Sudafrica;Cape Town;Long Street 120;-33.9249;18.4241;28.0;si;no;Africana;alecicc
+IstanbulMeze;Turchia;Istanbul;Istiklal Caddesi 50;41.0082;28.9784;22.0;si;si;Turca;azzor2
+SeoulBibimbap;Corea del Sud;Seoul;Myeongdong 7;37.5665;126.9780;27.0;no;si;Coreana;alecicc
+CanadianLodge;Canada;Toronto;Queen St W 300;43.6532;-79.3832;32.0;si;no;Canadese;azzor2
+ViennaKaffee;Austria;Vienna;Graben 19;48.2082;16.3738;18.0;no;si;Austriaca;alecicc
+AthensTaverna;Grecia;Atene;Plaka 3;37.9838;23.7275;24.0;si;no;Greca;alecicc
+BangkokSpice;Thailandia;Bangkok;Sukhumvit 14;13.7563;100.5018;26.0;si;si;Tailandese;alecicc
+DubaiSkyDine;Emirati Arabi Uniti;Dubai;Sheikh Zayed Rd 1;25.2048;55.2708;70.0;no;si;Fusion;azzor2
+HelsinkiHarbour;Finlandia;Helsinki;Esplanadi 33;60.1699;24.9384;38.0;si;no;Finlandese;alecicc

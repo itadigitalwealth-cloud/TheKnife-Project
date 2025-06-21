@@ -2,7 +2,8 @@
 TheKnife – README
 ================================================================================
 
-Autori  : <NOME> <COGNOME> – Mat. <NUMERO> – Sede <VA/CO>
+Autori  :  Matteo Vigano – 760537 – sede CO
+           FABIO  Vecaj  – 761232 – sede CO
 Versione: 1.0 (A.A. 2024/2025)
 Java    : Testato con JDK 21 (funziona da Java 17 in su)
 ================================================================================
@@ -73,6 +74,10 @@ TheKnifeProject/
 4. ESECUZIONE
 -------------
 
+4.0
+----------
+   Doppio click su run-TheKnife.vbs
+
 4.1 Da JAR
 ----------
     java -jar TheKnife.jar
@@ -83,29 +88,10 @@ TheKnifeProject/
     (o) java -cp bin theknife.gui.MainApp
     Entrambe avviano la GUI.
 
-Nota Windows: se hai doppio-clickato TheKnife.jar e non parte,
-      apri prima un cmd / PowerShell e lancia `java -jar TheKnife.jar`
-      così puoi leggere eventuali messaggi d’errore.
+Nota Windows: se hai doppio-clickato TheKnife.jar non sarà collegato 
+ai file csv , pertanto non sarà utilizzabile.
+Usare run-TheKnife.vbs che incorpora i file csv.
 
-
-5. FAQ / PROBLEMI COMUNI
-------------------------
-
-• «ClassNotFoundException: theknife.TheKnife»
-  → Il manifest del JAR non ha la Main-Class giusta oppure il .class
-    non è dentro theknife/ nella struttura del JAR.
-    Ricrea il JAR con `jar cfe TheKnife.jar theknife.TheKnife -C bin .`.
-
-• «java.nio.charset.MalformedInputException» durante la compilazione
-  → Lancio di javac senza specificare l’encoding: aggiungi `-encoding UTF-8`.
-
-• «Accesso negato» (Windows)
-  → Apri PowerShell “Esegui come Amministratore” oppure lavora in una
-    cartella dove hai pieno accesso in scrittura (es. la tua home).
-
-• «Impossibile aprire file CSV»
-  → Assicurati che nella cartella `data\` esistano i 4 file CSV
-    (anche vuoti ma con intestazione).
 
 --------------------------------------------------------------------------------
 Buon divertimento con TheKnife!

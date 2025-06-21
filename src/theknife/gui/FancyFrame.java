@@ -108,28 +108,12 @@ public class FancyFrame extends JFrame {
     private void initGUI() {
         setLayout(new BorderLayout());
 
-        /* ---------- Top bar con logo e titolo ---------- */
+        /* ---------- Top bar titolo ---------- */
         JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBackground(new Color(0, 102, 204));
         topBar.setPreferredSize(new Dimension(0, 80));
 
-        // Logo (opzionale)
-        JLabel logoLabel;
-        ImageIcon logoIcon = null;
-        try {
-            logoIcon = new ImageIcon(getClass().getResource("/logo.png"));
-        } catch (Exception ignored) { }
-        if (logoIcon != null) {
-            Image img        = logoIcon.getImage()
-                                       .getScaledInstance(60, 60,
-                                                          Image.SCALE_SMOOTH);
-            logoLabel = new JLabel(new ImageIcon(img));
-        } else {
-            logoLabel = new JLabel("LOGO");
-            logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-            logoLabel.setForeground(Color.WHITE);
-        }
-        topBar.add(logoLabel, BorderLayout.WEST);
+       
 
         JLabel title = new JLabel(" TheKnife ");
         title.setFont(new Font("Segoe UI", Font.BOLD, 30));
