@@ -6,9 +6,10 @@
  * @author FABIO  Vecaj  – 761232 – sede CO
  */
 
-package theknife.gui;
+package theknife;
 
 import javax.swing.SwingUtilities;
+import theknife.gui.FancyFrame;
 
 /**
  * Punto d’ingresso dell’applicazione TheKnife.
