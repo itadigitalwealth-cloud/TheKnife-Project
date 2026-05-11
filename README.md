@@ -1,98 +1,219 @@
 ================================================================================
-TheKnife – README
+  TheKnife – Piattaforma di ricerca ristoranti
+  Laboratorio Interdisciplinare B – a.a. 2024/2025
+  Università degli Studi dell'Insubria
 ================================================================================
 
-Autori  :  Matteo Vigano – 760537 – sede CO
-           FABIO  Vecaj  – 761232 – sede CO
-Versione: 1.0 (A.A. 2024/2025)
-Java    : Testato con JDK 21 (funziona da Java 17 in su)
+AUTORI
+------
+  Matteo Vigano  – 760537 – sede CO
+  Fabio Vecaj    – 761232 – sede CO
+
+REPOSITORY
+----------
+  https://github.com/[username]/VIGANO_760537
+
+================================================================================
+  PREREQUISITI
 ================================================================================
 
+  - Java JDK 17 o superiore       https://adoptium.net/
+  - Apache Maven 3.8+              https://maven.apache.org/download.cgi
+  - PostgreSQL 14+                 https://www.postgresql.org/download/
+  - psql (client PostgreSQL, incluso nell'installazione di PostgreSQL)
 
-1. REQUISITI
-------------
-• JDK 17 (o superiore) installato e presente nel PATH  
-  Verifica rapida:
-      java -version
-      javac -version
+  Verificare l'installazione:
+    java  -version
+    mvn   -version
+    psql  --version
 
-• Un terminale (cmd / PowerShell / Windows Terminal / bash / zsh ecc.)
+================================================================================
+  STRUTTURA DEL PROGETTO
+================================================================================
 
-• Facoltativo: IDE (IntelliJ IDEA, Eclipse, VS Code…) – il progetto è
-  autosufficiente anche da linea di comando.
+  VIGANO_760537/
+  ├── pom.xml                      Parent POM Maven (multi-modulo)
+  ├── theknife-common/             Modello + protocollo condivisi
+  │   └── src/main/java/it/uninsubria/theknife/common/
+  │       ├── CommandType.java
+  │       ├── Request.java
+  │       ├── Response.java
+  │       └── model/
+  │           ├── Ristorante.java
+  │           ├── Utente.java
+  │           └── Recensione.java
+  ├── theknife-server/             Modulo server (JDBC + socket)
+  │   └── src/main/java/it/uninsubria/theknife/server/
+  │       ├── ServerTK.java        Classe main del server
+  │       ├── ClientHandler.java   Thread per ogni client
+  │       └── DatabaseManager.java Accesso JDBC a PostgreSQL
+  ├── theknife-client/             Modulo client (GUI Swing)
+  │   └── src/main/java/it/uninsubria/theknife/client/
+  │       ├── ClientTK.java        Classe main del client
+  │       ├── ServerConnection.java Gestione socket
+  │       └── gui/                 Componenti grafici
+  ├── src/
+  │   └── db/
+  │       └── init.sql             Script SQL di creazione del database
+  ├── bin/                         JAR eseguibili (generati da Maven)
+  │   ├── serverTK.jar
+  │   └── clientTK.jar
+  ├── doc/                         Documentazione
+  │   ├── manuale-utente.pdf
+  │   ├── manuale-tecnico.pdf
+  │   └── javadoc/                 JavaDoc generata
+  ├── data/                        Dati di esempio (CSV, parte A)
+  ├── lib/                         Librerie esterne (gestite da Maven)
+  └── autori.txt                   Dati autori
 
+================================================================================
+  INSTALLAZIONE E CONFIGURAZIONE
+================================================================================
 
-2. STRUTTURA DEL PROGETTO
--------------------------
+  1. CLONARE IL REPOSITORY
+  ------------------------
+    git clone https://github.com/[username]/VIGANO_760537.git
+    cd VIGANO_760537
 
-TheKnifeProject/
-│
-├─ src/                     ← sorgenti .java
-│   └─ theknife/…
-│
-├─ bin/                     ← class files compilati (generata dallo script)
-│
-├─ data/                    ← file CSV iniziali
-│   ├─ utenti.csv
-│   ├─ ristoranti.csv
-│   ├─ recensioni.csv
-│   └─ preferiti.csv
-│
-├─ lib/           
-│
-├─ TheKnife.jar             ← JAR eseguibile generato
-│
-└─ README.txt  
+  2. CREARE IL DATABASE POSTGRESQL
+  ---------------------------------
+    Aprire pgAdmin o psql e creare un database vuoto:
 
+      CREATE DATABASE theknife;
 
-3. COMPILAZIONE MANUALE
------------------------
+    Oppure da riga di comando:
+      createdb -U postgres theknife
 
-⚠️ Per convenienza di chi usa Windows, i comandi sono mostrati in **PowerShell**.
-   Sostituisci “\” con “/” se sei su macOS/Linux.
+  3. INIZIALIZZARE IL DATABASE (SCHEMA E TABELLE)
+  ------------------------------------------------
+    Opzione A – tramite Maven (richiede psql nel PATH):
+      mvn -pl theknife-server exec:exec@init-db \
+          -Ddb.host=localhost \
+          -Ddb.port=5432 \
+          -Ddb.name=theknife \
+          -Ddb.user=postgres \
+          -Ddb.password=TUA_PASSWORD
 
-3.1 Pulizia ed esportazione class files
----------------------------------------
-    # Apri PowerShell nella cartella radice del progetto
-    Remove-Item -Recurse -Force .\bin  -ErrorAction Ignore
-    New-Item  -ItemType Directory .\bin | Out-Null
+    Opzione B – tramite psql direttamente:
+      psql -U postgres -d theknife -f src/db/init.sql
 
-    # Compila TUTTI i .java in bin\  (UTF-8 per evitare errori di accenti)
-    javac -encoding UTF-8 -d bin (Get-ChildItem -Recurse -Filter *.java | % FullName)
+    Opzione C – tramite pgAdmin:
+      Aprire pgAdmin → theknife → Query Tool → aprire src/db/init.sql → F5
 
-3.2 Creazione di un JAR eseguibile
-----------------------------------
-    jar cfe TheKnife.jar theknife.TheKnife -C bin .
+================================================================================
+  COMPILAZIONE
+================================================================================
 
-    Dove:
-      • c  = create
-      • f  = name of jar file
-      • e  = entry-point (Main-Class) ⇒  theknife.TheKnife
-      • -C bin .   = “entra” in bin\ e zippa tutto (.) nel JAR
+  Compilare tutti i moduli e produrre i JAR eseguibili:
 
+    mvn clean package
 
-4. ESECUZIONE
--------------
+  I file prodotti saranno:
+    bin/serverTK.jar   – server con driver JDBC incluso
+    bin/clientTK.jar   – client GUI Swing
 
-4.0
-----------
-   Doppio click su run-TheKnife.vbs
+  Per compilare solo un modulo:
+    mvn clean package -pl theknife-server -am
+    mvn clean package -pl theknife-client -am
 
-4.1 Da JAR
-----------
-    java -jar TheKnife.jar
+================================================================================
+  GENERAZIONE JAVADOC
+================================================================================
 
-4.2 Direttamente da class files
--------------------------------
-    java -cp bin theknife.TheKnife
-    (o) java -cp bin theknife.gui.MainApp
-    Entrambe avviano la GUI.
+    mvn javadoc:aggregate
 
-Nota Windows: se hai doppio-clickato TheKnife.jar non sarà collegato 
-ai file csv , pertanto non sarà utilizzabile.
-Usare run-TheKnife.vbs che incorpora i file csv.
+  La documentazione viene generata in:
+    target/site/apidocs/
 
+  Per includerla nella cartella doc/:
+    xcopy /E /I target\site\apidocs doc\javadoc     (Windows)
+    cp -r target/site/apidocs doc/javadoc           (Linux/macOS)
 
---------------------------------------------------------------------------------
-Buon divertimento con TheKnife!
+================================================================================
+  ESECUZIONE
+================================================================================
+
+  ORDINE OBBLIGATORIO: database → server → client
+
+  1. AVVIARE IL SERVER
+  --------------------
+    java -jar bin/serverTK.jar
+
+    Il server chiede interattivamente:
+      Host PostgreSQL  [localhost] :  ← Invio per default
+      Porta PostgreSQL [5432]      :  ← Invio per default
+      Nome database    [theknife]  :  ← Invio per default
+      Username DB      [postgres]  :  ← Invio per default
+      Password DB                  :  ← inserire la password
+      Porta server     [9090]      :  ← Invio per default
+
+    Una volta avviato:
+      [Server] Connessione al database riuscita.
+      [Server] In ascolto sulla porta 9090...
+
+    Per arrestare il server: digitare  quit  e premere Invio.
+
+  2. AVVIARE IL CLIENT (in un nuovo terminale)
+  --------------------------------------------
+    java -jar bin/clientTK.jar
+
+    Appare una finestra che chiede:
+      Host server: localhost
+      Porta:       9090
+
+    Premere OK per connettersi.
+
+  ESECUZIONE TRAMITE MAVEN (sviluppo):
+    mvn -pl theknife-server exec:java     ← avvia il server
+    mvn -pl theknife-client exec:java     ← avvia il client
+
+================================================================================
+  PARAMETRI DI DEFAULT
+================================================================================
+
+  PostgreSQL:        localhost:5432   database: theknife   user: postgres
+  Server TheKnife:   localhost:9090
+  Thread pool:       max 50 client in parallelo
+
+================================================================================
+  LIBRERIE UTILIZZATE
+================================================================================
+
+  Gestite automaticamente da Maven (vedi pom.xml):
+    - postgresql-42.7.3.jar   Driver JDBC PostgreSQL
+      https://jdbc.postgresql.org/
+    - junit-jupiter-5.10.2    Test unitari (scope: test)
+      https://junit.org/junit5/
+
+  Non sono necessarie installazioni manuali di librerie esterne.
+  Maven scarica automaticamente le dipendenze dal repository centrale.
+
+================================================================================
+  NOTE TECNICHE
+================================================================================
+
+  - La password viene hashata con SHA-256 lato client prima della
+    trasmissione. Non viene mai inviata in chiaro sulla rete.
+
+  - Il server gestisce più client in parallelo tramite un thread pool
+    fisso (ExecutorService). Ogni client ha una connessione JDBC dedicata
+    (pattern: una connessione per thread), eliminando race condition senza
+    sincronizzazione esplicita.
+
+  - La comunicazione client/server avviene tramite oggetti Java serializzati
+    (ObjectOutputStream/ObjectInputStream) su socket TCP persistenti.
+
+  - Il modulo theknife-common contiene le classi condivise tra client e
+    server (modello + protocollo). Il client NON include il driver JDBC.
+
+================================================================================
+  COMANDI MAVEN – RIEPILOGO
+================================================================================
+
+  mvn clean package                        Compila tutto e genera i JAR
+  mvn javadoc:aggregate                    Genera la JavaDoc unificata
+  mvn -pl theknife-server exec:java        Avvia il server (dev)
+  mvn -pl theknife-client exec:java        Avvia il client (dev)
+  mvn -pl theknife-server exec:exec@init-db  Inizializza il DB
+
 ================================================================================

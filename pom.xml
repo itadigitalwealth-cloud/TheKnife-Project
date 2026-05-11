@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    TheKnife – POM padre (multi-modulo)
+
+    Autori:
+      Matteo Vigano  – 760537 – sede CO
+      Fabio Vecaj    – 761232 – sede CO
+
+    Moduli:
+      theknife-common  → classi di modello e protocollo condivise tra client e server
+      theknife-server  → modulo server (ServerTK): gestione connessioni, JDBC, PostgreSQL
+      theknife-client  → modulo client (ClientTK): GUI Swing
+
+    Comandi utili:
+      mvn clean package          → compila tutto e genera i due .jar eseguibili
+      mvn javadoc:aggregate      → genera la JavaDoc unificata in target/site/apidocs/
+      mvn -pl theknife-server exec:java   → avvia il server direttamente da Maven
+      mvn -pl theknife-client exec:java   → avvia il client direttamente da Maven
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- =========================================================
+         Coordinate del progetto padre
+         ========================================================= -->
+    <groupId>it.uninsubria</groupId>
+    <artifactId>theknife-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>TheKnife – Parent</name>
+    <description>
+        Piattaforma TheKnife: ricerca ristoranti con architettura Client/Server
+        distribuita, database PostgreSQL e GUI Swing.
+    </description>
+
+    <!-- =========================================================
+         Moduli figli – Maven li compila nell'ordine dichiarato.
+         common deve essere il primo perché server e client dipendono da esso.
+         ========================================================= -->
+    <modules>
+        <module>theknife-common</module>
+        <module>theknife-server</module>
+        <module>theknife-client</module>
+    </modules>
+
+    <!-- =========================================================
+         Proprietà globali ereditate da tutti i moduli
+         ========================================================= -->
+    <properties>
+        <!-- Java 17 LTS: versione recente e multipiattaforma come richiesto -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Versioni delle dipendenze, centralizzate qui per manutenibilità -->
+        <postgresql.version>42.7.3</postgresql.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <!-- =========================================================
+         Dipendenze condivise (disponibili in tutti i moduli figli)
+         ========================================================= -->
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- Driver JDBC per PostgreSQL -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+
+            <!-- JUnit 5 per i test unitari -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Riferimento al modulo common: server e client lo dichiarano come dipendenza -->
+            <dependency>
+                <groupId>it.uninsubria</groupId>
+                <artifactId>theknife-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- =========================================================
+         Configurazione dei plugin condivisa tra tutti i moduli
+         ========================================================= -->
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <!-- Compilatore Java -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                    </configuration>
+                </plugin>
+
+                <!-- Generazione JavaDoc -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                    <configuration>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <charset>UTF-8</charset>
+                        <docencoding>UTF-8</docencoding>
+                        <!-- Includi anche i commenti dei package privati -->
+                        <show>package</show>
+                        <failOnError>false</failOnError>
+                    </configuration>
+                </plugin>
+
+                <!-- Plugin per l'esecuzione diretta da Maven (mvn exec:java) -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+
+                <!-- Plugin per i test JUnit 5 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <!-- =========================================================
+         Configurazione JavaDoc aggregata (mvn javadoc:aggregate)
+         Produce un unico sito con le API di tutti e tre i moduli.
+         ========================================================= -->
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <id>aggregate</id>
+                        <inherited>false</inherited>
+                        <reports>
+                            <report>aggregate</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
+
+</project>

@@ -1,0 +1,6 @@
+it\uninsubria\theknife\common\CommandType.class
+it\uninsubria\theknife\common\model\Recensione.class
+it\uninsubria\theknife\common\model\Ristorante.class
+it\uninsubria\theknife\common\Request.class
+it\uninsubria\theknife\common\Response.class
+it\uninsubria\theknife\common\model\Utente.class

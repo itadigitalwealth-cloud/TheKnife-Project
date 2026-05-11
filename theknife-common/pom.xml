@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    TheKnife – Modulo: theknife-common
+
+    Contiene le classi condivise tra server e client:
+      - Classi di modello: Ristorante, Utente, Recensione
+      - Classi del protocollo di comunicazione: Request, Response
+
+    Questo modulo NON ha un main: viene incluso come dipendenza
+    da theknife-server e theknife-client.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>it.uninsubria</groupId>
+        <artifactId>theknife-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>theknife-common</artifactId>
+    <packaging>jar</packaging>
+    <name>TheKnife – Common</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

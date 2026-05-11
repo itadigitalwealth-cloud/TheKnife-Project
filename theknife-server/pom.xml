@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    TheKnife – Modulo: theknife-server
+
+    Produce: bin/serverTK.jar  (fat-JAR con driver JDBC incluso)
+    Main:    it.uninsubria.theknife.server.ServerTK
+
+    Goal aggiuntivo:
+      mvn -pl theknife-server exec:java@init-db
+        → esegue src/db/init.sql sul database specificato nelle properties
+          (richiede che PostgreSQL sia raggiungibile)
+
+    Parametri per init-db (sovrascrivibili da riga di comando):
+      -Ddb.host=localhost
+      -Ddb.port=5432
+      -Ddb.name=theknife
+      -Ddb.user=postgres
+      -Ddb.password=postgres
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>it.uninsubria</groupId>
+        <artifactId>theknife-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>theknife-server</artifactId>
+    <packaging>jar</packaging>
+    <name>TheKnife – Server</name>
+
+    <!-- =========================================================
+         Proprietà per la creazione del DB (sovrascrivibili)
+         ========================================================= -->
+    <properties>
+        <db.host>localhost</db.host>
+        <db.port>5432</db.port>
+        <db.name>theknife</db.name>
+        <db.user>postgres</db.user>
+        <db.password>postgres</db.password>
+    </properties>
+
+    <dependencies>
+
+        <!-- Classi di modello e protocollo condivise -->
+        <dependency>
+            <groupId>it.uninsubria</groupId>
+            <artifactId>theknife-common</artifactId>
+        </dependency>
+
+        <!-- Driver JDBC PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- =====================================================
+                 FAT-JAR: produce bin/serverTK.jar
+                 ===================================================== -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>it.uninsubria.theknife.server.ServerTK</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <outputDirectory>${project.basedir}/../bin</outputDirectory>
+                    <finalName>serverTK</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals><goal>single</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- =====================================================
+                 INIT-DB: esegue init.sql tramite psql
+                 Uso: mvn -pl theknife-server exec:exec@init-db
+                      -Ddb.password=<password>
+                 ===================================================== -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+
+                    <!-- Esecuzione del server (mvn exec:java) -->
+                    <execution>
+                        <id>run-server</id>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>it.uninsubria.theknife.server.ServerTK</mainClass>
+                        </configuration>
+                    </execution>
+
+                    <!-- Inizializzazione DB tramite psql -->
+                    <execution>
+                        <id>init-db</id>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <executable>psql</executable>
+                            <arguments>
+                                <!-- Connessione -->
+                                <argument>-h</argument><argument>${db.host}</argument>
+                                <argument>-p</argument><argument>${db.port}</argument>
+                                <argument>-U</argument><argument>${db.user}</argument>
+                                <argument>-d</argument><argument>${db.name}</argument>
+                                <!-- Script SQL -->
+                                <argument>-f</argument>
+                                <argument>${project.basedir}/../src/db/init.sql</argument>
+                            </arguments>
+                            <environmentVariables>
+                                <!-- Evita il prompt password passandola come variabile d'ambiente -->
+                                <PGPASSWORD>${db.password}</PGPASSWORD>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

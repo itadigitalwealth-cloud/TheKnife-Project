@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    TheKnife – Modulo: theknife-client
+
+    Produce il JAR eseguibile: clientTK.jar
+    Classe principale: it.uninsubria.theknife.client.ClientTK
+
+    Dipende da:
+      - theknife-common  (modello + protocollo)
+    NON dipende dal driver PostgreSQL: il client non accede mai al DB direttamente.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>it.uninsubria</groupId>
+        <artifactId>theknife-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>theknife-client</artifactId>
+    <packaging>jar</packaging>
+    <name>TheKnife – Client</name>
+
+    <dependencies>
+
+        <!-- Classi di modello e protocollo condivise -->
+        <dependency>
+            <groupId>it.uninsubria</groupId>
+            <artifactId>theknife-common</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- Fat-JAR del client (Swing + classi comuni) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>it.uninsubria.theknife.client.ClientTK</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <!-- Necessario su alcuni sistemi per avviare la GUI Swing -->
+                            <SplashScreen-Image></SplashScreen-Image>
+                        </manifestEntries>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <outputDirectory>${project.basedir}/../bin</outputDirectory>
+                    <finalName>clientTK</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Esecuzione diretta: mvn -pl theknife-client exec:java -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>it.uninsubria.theknife.client.ClientTK</mainClass>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
