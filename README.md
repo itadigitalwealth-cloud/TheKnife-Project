@@ -6,8 +6,9 @@
 
 AUTORI
 ------
-  Matteo Vigano  – 760537 – sede CO
-  Fabio Vecaj    – 761232 – sede CO
+  Matteo Vigano       – 760537 – sede CO
+  Fabio Vecaj         – 761232 – sede CO
+  De Zuane Samuele    - 763267 - sede CO
 
 REPOSITORY
 ----------

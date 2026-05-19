@@ -1,11 +1,9 @@
 /**
- * TheKnife – Modulo Client
- * Finestra principale – stile Luxury Editorial.
+ * TheKnife – Finestra principale.
  *
  * @author Matteo Vigano  – 760537 – sede CO
  * @author Fabio Vecaj    – 761232 – sede CO
  */
-
 package it.uninsubria.theknife.client.gui;
 
 import it.uninsubria.theknife.client.ClientTK;
@@ -13,25 +11,22 @@ import it.uninsubria.theknife.client.gui.panels.*;
 import it.uninsubria.theknife.common.model.Utente;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
 
 /**
- * Finestra principale di TheKnife con layout professionale a tre zone:
- * <ul>
- *   <li>Top bar bianca: logo + utente corrente + azioni</li>
- *   <li>Sidebar scura (midnight navy): navigazione verticale</li>
- *   <li>Area contenuto: sfondo ivory caldo con CardLayout</li>
- * </ul>
+ * Finestra principale con:
+ * sidebar navy + top bar bianca + area contenuto ivory.
  */
 public class FancyFrame extends JFrame {
 
-    public static final String CARD_HOME       = "HomePanel";
-    public static final String CARD_SEARCH     = "SearchPanel";
-    public static final String CARD_RISTORANTI = "RistorantiPanel";
-    public static final String CARD_RECENSIONI = "RecensioniPanel";
-    public static final String CARD_PREFERITI  = "PreferitiPanel";
-    public static final String CARD_DETAIL     = "RestaurantDetailPanel";
+    public static final String CARD_HOME       = "Home";
+    public static final String CARD_SEARCH     = "Search";
+    public static final String CARD_RISTORANTI = "Ristoranti";
+    public static final String CARD_RECENSIONI = "Recensioni";
+    public static final String CARD_PREFERITI  = "Preferiti";
+    public static final String CARD_DETAIL     = "Detail";
 
     private final CardLayout cardLayout  = new CardLayout();
     private final JPanel     centerPanel = new JPanel(cardLayout);
@@ -44,19 +39,18 @@ public class FancyFrame extends JFrame {
     private RestaurantDetailPanel detailPanel;
 
     // Top bar
-    private final JLabel  lblUserName = new JLabel("Ospite");
-    private final JLabel  lblUserRole = new JLabel("");
-    private final JLabel  lblDot      = new JLabel("·");
-    private final UITheme.StyledButton btnLogin  = UITheme.btnPrimary("Accedi");
-    private final UITheme.StyledButton btnLogout = UITheme.btnGhost("Esci");
+    private final JLabel  lblName   = new JLabel("Ospite");
+    private final JLabel  lblRole   = new JLabel("");
+    private final UITheme.TKButton btnAccedi = UITheme.btnPrimary("Accedi");
+    private final UITheme.TKButton btnEsci   = UITheme.btnGhost("Esci");
 
-    // Sidebar
-    private JButton btnAttivo = null;
+    // Sidebar – pulsante attivo corrente
+    private SidebarItem sidebarAttivo = null;
 
     public FancyFrame() {
         super("TheKnife");
         setSize(1340, 800);
-        setMinimumSize(new Dimension(960, 640));
+        setMinimumSize(new Dimension(1000, 640));
         setLocationRelativeTo(null);
         UITheme.apply();
 
@@ -71,15 +65,12 @@ public class FancyFrame extends JFrame {
 
     private void buildFrame() {
         setLayout(new BorderLayout(0, 0));
-        JPanel topBar = buildTopBar();
-        JPanel sidebar = buildSidebar();
-
         centerPanel.setBackground(UITheme.BG);
-        centerPanel.setBorder(new EmptyBorder(28, 28, 28, 28));
+        centerPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        add(topBar,       BorderLayout.NORTH);
-        add(sidebar,      BorderLayout.WEST);
-        add(centerPanel,  BorderLayout.CENTER);
+        add(buildTopBar(),   BorderLayout.NORTH);
+        add(buildSidebar(),  BorderLayout.WEST);
+        add(centerPanel,     BorderLayout.CENTER);
     }
 
     private void buildPanels() {
@@ -106,74 +97,83 @@ public class FancyFrame extends JFrame {
         JPanel bar = new JPanel(new BorderLayout()) {
             @Override protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Linea di accento oro in basso
+                // Linea oro 2px in basso
                 g.setColor(UITheme.GOLD);
-                g.fillRect(0, getHeight()-2, getWidth(), 2);
+                g.fillRect(0, getHeight() - 2, getWidth(), 2);
             }
         };
         bar.setBackground(UITheme.TOPBAR_BG);
         bar.setPreferredSize(new Dimension(0, UITheme.TOPBAR_H));
-        bar.setBorder(new EmptyBorder(0, 20, 2, 20));
+        bar.setBorder(new EmptyBorder(0, 18, 2, 18));
 
-        // SINISTRA: logo
-        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        left.setOpaque(false);
+        // Logo
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        logoPanel.setOpaque(false);
 
-        // Rettangolo logo
+        // Box logo
         JPanel logoBox = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Graphics2D g2 = UITheme.rh(g);
                 g2.setColor(UITheme.SIDEBAR_BG);
-                g2.fillRoundRect(0, 6, 38, 34, 8, 8);
+                g2.fillRoundRect(0, 6, 34, 30, 8, 8);
                 g2.setColor(UITheme.GOLD);
-                g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
-                FontMetrics fm = g2.getFontMetrics();
-                g2.drawString("🔪", 8, 28);
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 15));
+                g2.drawString("TK", 6, 26);
                 g2.dispose();
             }
         };
         logoBox.setOpaque(false);
-        logoBox.setPreferredSize(new Dimension(42, UITheme.TOPBAR_H));
+        logoBox.setPreferredSize(new Dimension(38, UITheme.TOPBAR_H));
 
         JLabel appName = new JLabel("TheKnife");
-        appName.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        appName.setFont(new Font("Segoe UI", Font.BOLD, 18));
         appName.setForeground(UITheme.SIDEBAR_BG);
         appName.setBorder(new EmptyBorder(0, 8, 0, 0));
 
-        JLabel tagline = new JLabel("  Guida ai Ristoranti");
+        JLabel tagline = new JLabel("  —  Guida ai ristoranti");
         tagline.setFont(UITheme.FONT_SMALL);
         tagline.setForeground(UITheme.TEXT_MUTED);
 
-        left.add(logoBox);
-        left.add(appName);
-        left.add(tagline);
-        bar.add(left, BorderLayout.WEST);
+        logoPanel.add(logoBox);
+        logoPanel.add(appName);
+        logoPanel.add(tagline);
+        bar.add(logoPanel, BorderLayout.WEST);
 
-        // DESTRA: utente
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        // Utente
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.setOpaque(false);
 
-        lblDot.setFont(UITheme.FONT_BODY);
-        lblDot.setForeground(UITheme.TEXT_MUTED);
-        lblDot.setVisible(false);
+        // Avatar
+        JPanel avatar = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = UITheme.rh(g);
+                g2.setColor(new Color(29, 158, 117));
+                g2.fillOval(0, 4, 28, 28);
+                g2.setColor(new Color(225, 245, 238));
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                FontMetrics fm = g2.getFontMetrics();
+                String ini = lblName.getText().length() > 0 ? lblName.getText().substring(0,1).toUpperCase() : "G";
+                g2.drawString(ini, (28 - fm.stringWidth(ini))/2, 4 + (28 + fm.getAscent() - fm.getDescent())/2);
+                g2.dispose();
+            }
+            @Override public Dimension getPreferredSize() { return new Dimension(28, UITheme.TOPBAR_H); }
+        };
+        avatar.setOpaque(false);
 
-        lblUserRole.setFont(UITheme.FONT_SMALL);
-        lblUserRole.setForeground(UITheme.TEXT_MUTED);
+        lblRole.setFont(UITheme.FONT_SMALL);
+        lblRole.setForeground(UITheme.TEXT_MUTED);
+        lblName.setFont(UITheme.FONT_H3);
+        lblName.setForeground(UITheme.TEXT);
+        btnEsci.setVisible(false);
 
-        lblUserName.setFont(UITheme.FONT_H3);
-        lblUserName.setForeground(UITheme.TEXT);
+        btnAccedi.addActionListener(e -> doLogin());
+        btnEsci.addActionListener(e  -> doLogout());
 
-        btnLogout.setVisible(false);
-        btnLogin.addActionListener(e  -> doLogin());
-        btnLogout.addActionListener(e -> doLogout());
-
-        right.add(lblUserRole);
-        right.add(lblDot);
-        right.add(lblUserName);
-        right.add(Box.createHorizontalStrut(4));
-        right.add(btnLogin);
-        right.add(btnLogout);
+        right.add(avatar);
+        right.add(lblRole);
+        right.add(lblName);
+        right.add(btnAccedi);
+        right.add(btnEsci);
         bar.add(right, BorderLayout.EAST);
         return bar;
     }
@@ -187,117 +187,82 @@ public class FancyFrame extends JFrame {
             @Override protected void paintComponent(Graphics g) {
                 g.setColor(UITheme.SIDEBAR_BG);
                 g.fillRect(0, 0, getWidth(), getHeight());
+                // Bordo destro sottile
+                g.setColor(new Color(255, 255, 255, 12));
+                g.fillRect(getWidth()-1, 0, 1, getHeight());
             }
         };
         sb.setLayout(new BoxLayout(sb, BoxLayout.Y_AXIS));
         sb.setPreferredSize(new Dimension(UITheme.SIDEBAR_W, 0));
-        sb.setBorder(new EmptyBorder(24, 0, 24, 0));
+        sb.setBorder(new EmptyBorder(20, 0, 20, 0));
         sb.setOpaque(true);
 
-        // Sezione principale
-        sb.add(UITheme.sectionLabel("  Navigazione"));
-        sb.add(Box.createVerticalStrut(6));
-        sb.add(navItem("  Home",         CARD_HOME,       null,           "⌂"));
-        sb.add(navItem("  Esplora",      CARD_SEARCH,     null,           "◎"));
+        sb.add(sidebarSection("Principale"));
+        sb.add(sidebarItem("Home",         CARD_HOME,       null));
+        sb.add(sidebarItem("Esplora",      CARD_SEARCH,     null));
 
-        // Sezione cliente
-        sb.add(Box.createVerticalStrut(20));
-        sb.add(UITheme.sectionLabel("  Area Cliente"));
-        sb.add(Box.createVerticalStrut(6));
-        sb.add(navItem("  Preferiti",    CARD_PREFERITI,  "cliente",      "♥"));
-        sb.add(navItem("  Recensioni",   CARD_RECENSIONI, null,           "✦"));
+        sb.add(Box.createVerticalStrut(8));
+        sb.add(sidebarSection("Cliente"));
+        sb.add(sidebarItem("Preferiti",    CARD_PREFERITI,  "cliente"));
+        sb.add(sidebarItem("Recensioni",   CARD_RECENSIONI, null));
 
-        // Sezione ristoratore
-        sb.add(Box.createVerticalStrut(20));
-        sb.add(UITheme.sectionLabel("  Area Ristoratore"));
-        sb.add(Box.createVerticalStrut(6));
-        sb.add(navItem("  Miei Locali",  CARD_RISTORANTI, "ristoratore",  "◈"));
+        sb.add(Box.createVerticalStrut(8));
+        sb.add(sidebarSection("Ristoratore"));
+        sb.add(sidebarItem("Miei locali",  CARD_RISTORANTI, "ristoratore"));
 
         sb.add(Box.createVerticalGlue());
 
-        // Footer sidebar
+        // Footer versione
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
-        footer.setBorder(new EmptyBorder(12, 16, 0, 16));
-        footer.setMaximumSize(new Dimension(UITheme.SIDEBAR_W, 40));
-
-        JLabel ver = new JLabel("TheKnife v2.0");
+        footer.setBorder(new EmptyBorder(12, 18, 0, 18));
+        footer.setMaximumSize(new Dimension(UITheme.SIDEBAR_W, 32));
+        JLabel ver = new JLabel("v2.0");
         ver.setFont(UITheme.FONT_SMALL);
-        ver.setForeground(new Color(50, 60, 90));
+        ver.setForeground(new Color(55, 65, 95));
         footer.add(ver, BorderLayout.CENTER);
         sb.add(footer);
         return sb;
     }
 
-    private JButton navItem(String label, String card, String ruolo, String icon) {
-        JButton btn = new JButton() {
-            private boolean hovered = false;
-            {
-                addMouseListener(new java.awt.event.MouseAdapter() {
-                    public void mouseEntered(java.awt.event.MouseEvent e) { hovered=true;  repaint(); }
-                    public void mouseExited (java.awt.event.MouseEvent e) { hovered=false; repaint(); }
-                });
-            }
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D)g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                boolean active = (this == btnAttivo);
-                if (active) {
-                    // Indicatore attivo: rettangolo laterale oro + sfondo
-                    g2.setColor(UITheme.SIDEBAR_ACTIVE);
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                    g2.setColor(UITheme.GOLD);
-                    g2.fillRect(0, 0, 3, getHeight());
-                } else if (hovered) {
-                    g2.setColor(UITheme.SIDEBAR_HOVER);
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                }
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
+    private JLabel sidebarSection(String txt) {
+        JLabel l = new JLabel(txt.toUpperCase());
+        l.setFont(UITheme.FONT_LABEL);
+        l.setForeground(UITheme.SIDEBAR_MUTED);
+        l.setBorder(new EmptyBorder(12, 18, 4, 18));
+        l.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return l;
+    }
 
-        btn.setText(icon + "  " + label.trim());
-        btn.setFont(UITheme.FONT_BODY);
-        btn.setForeground(UITheme.SIDEBAR_TEXT);
-        btn.setHorizontalAlignment(SwingConstants.LEFT);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setMaximumSize(new Dimension(UITheme.SIDEBAR_W, 42));
-        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setBorder(new EmptyBorder(10, 16, 10, 16));
-
-        btn.addActionListener(e -> {
-            if ("cliente".equals(ruolo) &&
-                    (!isLoggedIn() || !ClientTK.getUtenteLoggato().isCliente())) {
-                showAccessDenied("cliente"); return;
+    private SidebarItem sidebarItem(String label, String card, String ruolo) {
+        SidebarItem item = new SidebarItem(label);
+        item.addActionListener(e -> {
+            if ("cliente".equals(ruolo) && (!isLoggedIn() || !ClientTK.getUtenteLoggato().isCliente())) {
+                showAccessDenied(); return;
             }
-            if ("ristoratore".equals(ruolo) &&
-                    (!isLoggedIn() || !ClientTK.getUtenteLoggato().isRistoratore())) {
-                showAccessDenied("ristoratore"); return;
+            if ("ristoratore".equals(ruolo) && (!isLoggedIn() || !ClientTK.getUtenteLoggato().isRistoratore())) {
+                showAccessDenied(); return;
             }
-            setActive(btn);
+            setActive(item);
             showCard(card);
-            if (CARD_HOME.equals(card))      homePanel.refresh();
             if (CARD_SEARCH.equals(card))     searchPanel.refresh();
+            if (CARD_HOME.equals(card))        homePanel.refresh();
             if (CARD_RISTORANTI.equals(card)) ristorantiPanel.refreshData();
             if (CARD_RECENSIONI.equals(card)) recensioniPanel.refreshData();
             if (CARD_PREFERITI.equals(card))  preferitiPanel.refreshData();
         });
-        return btn;
+        return item;
     }
 
-    private void setActive(JButton btn) {
-        if (btnAttivo != null) btnAttivo.repaint();
-        btnAttivo = btn;
-        btn.repaint();
+    private void setActive(SidebarItem item) {
+        if (sidebarAttivo != null) sidebarAttivo.setActive(false);
+        sidebarAttivo = item;
+        item.setActive(true);
     }
 
-    private void showAccessDenied(String ruolo) {
+    private void showAccessDenied() {
         JOptionPane.showMessageDialog(this,
-                "Questa sezione richiede l'accesso come " + ruolo + ".",
+                "Devi essere loggato per accedere a questa sezione.",
                 "Accesso riservato", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -310,12 +275,10 @@ public class FancyFrame extends JFrame {
         dlg.setVisible(true);
         Utente u = dlg.getUtenteLoggato();
         if (u != null) {
-            lblUserName.setText(u.getNome() + " " + u.getCognome());
-            lblUserRole.setText(u.getRuolo().substring(0,1).toUpperCase()
-                                + u.getRuolo().substring(1));
-            lblDot.setVisible(true);
-            btnLogin.setVisible(false);
-            btnLogout.setVisible(true);
+            lblName.setText(u.getNome() + " " + u.getCognome());
+            lblRole.setText(capitalize(u.getRuolo()) + "  •  ");
+            btnAccedi.setVisible(false);
+            btnEsci.setVisible(true);
             getContentPane().revalidate();
             getContentPane().repaint();
         }
@@ -323,19 +286,24 @@ public class FancyFrame extends JFrame {
 
     private void doLogout() {
         ClientTK.logout();
-        lblUserName.setText("Ospite");
-        lblUserRole.setText("");
-        lblDot.setVisible(false);
-        btnLogin.setVisible(true);
-        btnLogout.setVisible(false);
-        if (btnAttivo != null) { btnAttivo.repaint(); btnAttivo = null; }
+        lblName.setText("Ospite");
+        lblRole.setText("");
+        btnAccedi.setVisible(true);
+        btnEsci.setVisible(false);
+        if (sidebarAttivo != null) { sidebarAttivo.setActive(false); sidebarAttivo = null; }
         showCard(CARD_HOME);
+        homePanel.refresh();
         getContentPane().revalidate();
         getContentPane().repaint();
     }
 
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
+    }
+
     // =========================================================================
-    // API
+    // API PUBBLICA
     // =========================================================================
 
     public void showCard(String name)   { cardLayout.show(centerPanel, name); }
@@ -343,7 +311,77 @@ public class FancyFrame extends JFrame {
     public Utente  getUtenteCorrente()  { return ClientTK.getUtenteLoggato(); }
     public RestaurantDetailPanel getDetailPanel() { return detailPanel; }
     public SearchPanel getSearchPanel() { return searchPanel; }
-}
 
-// Metodo aggiunto per HomePanel
-// (già presente nella classe, ma esposto come accessor)
+    // =========================================================================
+    // SIDEBAR ITEM – componente custom
+    // =========================================================================
+
+    /**
+     * Voce di navigazione sidebar: sfondo navy, indicatore oro a sinistra,
+     * testo che cambia colore in base allo stato active/hover.
+     */
+    public static class SidebarItem extends JButton {
+
+        private boolean active = false;
+        private float   hover  = 0f;
+        private Timer   timer;
+        private final String label;
+
+        public SidebarItem(String label) {
+            super(label);
+            this.label = label;
+            setFont(UITheme.FONT_BODY);
+            setForeground(UITheme.SIDEBAR_TEXT);
+            setHorizontalAlignment(SwingConstants.LEFT);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setContentAreaFilled(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            setMaximumSize(new Dimension(UITheme.SIDEBAR_W, 40));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            setBorder(new EmptyBorder(9, 18, 9, 18));
+
+            addMouseListener(new MouseAdapter() {
+                @Override public void mouseEntered(MouseEvent e) { if (!active) animateTo(1f); }
+                @Override public void mouseExited (MouseEvent e) { if (!active) animateTo(0f); }
+            });
+        }
+
+        public void setActive(boolean a) {
+            this.active = a;
+            hover = a ? 1f : 0f;
+            setForeground(a ? UITheme.SIDEBAR_ACTIVE_FG : UITheme.SIDEBAR_TEXT);
+            repaint();
+        }
+
+        private void animateTo(float t) {
+            if (timer != null) timer.stop();
+            timer = new Timer(10, null);
+            timer.addActionListener(e -> {
+                hover += (t - hover) * 0.28f;
+                if (Math.abs(hover - t) < 0.02f) { hover = t; timer.stop(); }
+                repaint();
+            });
+            timer.start();
+        }
+
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = UITheme.rh(g);
+            int w = getWidth(), h = getHeight();
+
+            if (active) {
+                // Sfondo oro trasparente
+                g2.setColor(UITheme.SIDEBAR_ACTIVE_BG);
+                g2.fillRect(0, 0, w, h);
+                // Indicatore gold sinistra
+                g2.setColor(UITheme.GOLD);
+                g2.fillRoundRect(0, 6, 3, h - 12, 3, 3);
+            } else if (hover > 0.01f) {
+                g2.setColor(new Color(255, 255, 255, (int)(hover * 13)));
+                g2.fillRect(0, 0, w, h);
+            }
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+}

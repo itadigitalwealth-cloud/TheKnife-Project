@@ -1,166 +1,436 @@
 /**
- * TheKnife – Modulo Client
- * Pannello preferiti cliente.
- *
- * @author Matteo Vigano  – 760537 – sede CO
- * @author Fabio Vecaj    – 761232 – sede CO
+ * TheKnife – Modulo Client - Pannello Preferiti
+ * * @author Matteo Vigano      – 760537 – sede CO
+ * @author Fabio Vecaj        – 761232 – sede CO
+ * @author De Zuane Samuele   – 763267 – sede CO
  */
-
 package it.uninsubria.theknife.client.gui.panels;
 
 import it.uninsubria.theknife.client.ClientTK;
-import it.uninsubria.theknife.client.gui.FancyFrame;
-import it.uninsubria.theknife.client.gui.GradientPanel;
+import it.uninsubria.theknife.client.gui.*;
 import it.uninsubria.theknife.common.CommandType;
 import it.uninsubria.theknife.common.Request;
 import it.uninsubria.theknife.common.Response;
 import it.uninsubria.theknife.common.model.Ristorante;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
- * Pannello per la gestione dei ristoranti preferiti del cliente.
- * <p>
- * Implementa le funzioni {@code aggiungiPreferito()},
- * {@code rimuoviPreferito()} e {@code visualizzaPreferiti()}
- * delle specifiche, delegando ogni operazione al server.
- * </p>
+ * Pannello per la visualizzazione e gestione dei ristoranti preferiti del cliente.
  */
 public class PreferitiPanel extends GradientPanel {
 
     private final FancyFrame parent;
-    private final JTextArea  textArea    = new JTextArea();
-    private final JButton    btnAggiungi = new JButton("+ Aggiungi Preferito");
-    private final JButton    btnRimuovi  = new JButton("− Rimuovi Preferito");
+    private List<Ristorante> cache = new ArrayList<>();
+    private boolean ordinaPerSt = false;
 
-    /** Lista corrente dei ristoranti preferiti (per il dialog di rimozione). */
-    private List<Ristorante> preferitiCorrente = List.of();
+    // Rimosso WrapLayout temporaneamente per usare un GridLayout dinamico controllato che garantisce la visibilità
+    private final JPanel gridPanel = new JPanel();
+    private final JLabel lblCount = new JLabel("");
+    private final UITheme.TKButton btnSort = UITheme.btnGhost("Ordina per stelle");
+    private JScrollPane scroll;
 
-    /**
-     * @param parent frame principale
-     */
     public PreferitiPanel(FancyFrame parent) {
-        super(new Color(220, 220, 220), new Color(200, 200, 200));
+        super(new BorderLayout());
         this.parent = parent;
+        setBackground(UITheme.BG);
         initUI();
     }
 
     private void initUI() {
-        setLayout(new BorderLayout());
+        add(buildTopBar(), BorderLayout.NORTH);
 
-        JLabel lbl = new JLabel("I Miei Preferiti", SwingConstants.CENTER);
-        lbl.setFont(new Font("SansSerif", Font.BOLD, 20));
-        add(lbl, BorderLayout.NORTH);
+        // Pannello principale del contenuto con BoxLayout verticale
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(UITheme.BG);
+        content.setBorder(new EmptyBorder(15, 20, 20, 20));
 
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
-        add(new JScrollPane(textArea), BorderLayout.CENTER);
+        lblCount.setFont(UITheme.FONT_SMALL);
+        lblCount.setForeground(UITheme.TEXT_MUTED);
+        lblCount.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(lblCount);
+        content.add(Box.createVerticalStrut(10));
 
-        JPanel bottom = new JPanel();
-        bottom.add(btnAggiungi);
-        bottom.add(btnRimuovi);
-        add(bottom, BorderLayout.SOUTH);
+        // Configurazione iniziale della griglia
+        gridPanel.setBackground(UITheme.BG);
+        gridPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(gridPanel);
 
-        btnAggiungi.addActionListener(e -> aggiungiPreferito());
-        btnRimuovi .addActionListener(e -> rimuoviPreferito());
+        scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.setBackground(UITheme.BG);
+        scroll.getViewport().setBackground(UITheme.BG);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        add(scroll, BorderLayout.CENTER);
+        add(buildBottomBar(), BorderLayout.SOUTH);
     }
 
-    /**
-     * Ricarica la lista dei preferiti dal server.
-     */
+    private JPanel buildTopBar() {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(Color.WHITE);
+        bar.setPreferredSize(new Dimension(0, 65));
+        bar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.CARD_BORDER),
+                new EmptyBorder(0, 20, 0, 20)));
+
+        JPanel left = new JPanel(new GridBagLayout());
+        left.setOpaque(false);
+        JLabel title = new JLabel("I miei preferiti");
+        title.setFont(UITheme.FONT_H1);
+        title.setForeground(UITheme.TEXT);
+        left.add(title);
+
+        btnSort.addActionListener(e -> {
+            ordinaPerSt = !ordinaPerSt;
+            btnSort.setText(ordinaPerSt ? "Ordine alfabetico" : "Ordina per stelle");
+            popolaGriglia();
+        });
+
+        bar.add(left, BorderLayout.WEST);
+        bar.add(btnSort, BorderLayout.EAST);
+        return bar;
+    }
+
+    private JPanel buildBottomBar() {
+        JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 12));
+        bar.setBackground(Color.WHITE);
+        bar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UITheme.CARD_BORDER));
+
+        UITheme.TKButton btnAgg = UITheme.btnPrimary("+ Aggiungi Ristorante");
+        btnAgg.addActionListener(e -> aggiungiManualeFlusso());
+        bar.add(btnAgg);
+        return bar;
+    }
+
     public void refreshData() {
-        textArea.setText("");
-        preferitiCorrente = List.of();
+        gridPanel.removeAll();
 
         if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isCliente()) {
-            textArea.setText("Devi essere loggato come cliente per vedere i preferiti.");
+            aggiungiLabel("Accedi come cliente per vedere i tuoi preferiti.");
+            lblCount.setText("");
             return;
         }
 
-        try {
-            Request req = new Request(CommandType.CLIENTE_VISUALIZZA_PREFERITI,
-                                      ClientTK.getUtenteLoggato().getUsername());
-            Response resp = ClientTK.getConnessione().invia(req);
+        aggiungiLabel("Caricamento in corso...");
 
-            if (resp.isSuccesso()) {
-                preferitiCorrente = resp.getDatoTipizzato();
-                stampaPreferiti(preferitiCorrente);
-            } else {
-                textArea.setText("Errore: " + resp.getMessaggio());
+        new SwingWorker<List<Ristorante>, Void>() {
+            @Override
+            protected List<Ristorante> doInBackground() throws Exception {
+                Response r = ClientTK.getConnessione().invia(
+                        new Request(CommandType.CLIENTE_VISUALIZZA_PREFERITI,
+                                ClientTK.getUtenteLoggato().getUsername()));
+                return r.isSuccesso() ? r.getDatoTipizzato() : List.of();
             }
-        } catch (Exception ex) {
-            textArea.setText("Errore di connessione: " + ex.getMessage());
-        }
+
+            @Override
+            protected void done() {
+                try {
+                    cache = get();
+                    System.out.println("[DEBUG] Elementi arrivati a destinazione: " + (cache != null ? cache.size() : "null"));
+                    popolaGriglia();
+                } catch (Exception ex) {
+                    gridPanel.removeAll();
+                    aggiungiLabel("Errore durante il caricamento: " + ex.getMessage());
+                }
+            }
+        }.execute();
     }
 
-    private void stampaPreferiti(List<Ristorante> lista) {
-        if (lista.isEmpty()) {
-            textArea.setText("Non hai ancora ristoranti preferiti.\nUsil pulsante «+ Aggiungi» per aggiungerne uno.");
+    private void popolaGriglia() {
+        gridPanel.removeAll();
+        if (cache == null || cache.isEmpty()) {
+            lblCount.setText("0 ristoranti salvati");
+            aggiungiLabel("Non hai ancora ristoranti preferiti. Cercane uno per città per aggiunculi.");
+            revalidate();
+            repaint();
             return;
         }
-        StringBuilder sb = new StringBuilder("=== I Miei Preferiti ===\n\n");
-        for (Ristorante r : lista) {
-            sb.append(String.format("%-25s  %s  –  %s  (%.0f€)  ⭐ %.1f%n",
-                    r.getNome(), r.getCitta(), r.getTipoCucina(),
-                    r.getFasciaPrezzo(), r.getMediaStelle()));
+
+        lblCount.setText(cache.size() + (cache.size() == 1 ? " ristorante salvato" : " ristoranti salvati"));
+
+        List<Ristorante> lista = ordinaPerSt
+                ? cache.stream().sorted(Comparator.comparingDouble(Ristorante::getMediaStelle).reversed()).toList()
+                : cache.stream().sorted(Comparator.comparing(Ristorante::getNome)).toList();
+
+        // FIX LAYOUT: Configura una griglia fissa adattiva basata sul numero di elementi reali arrivati
+        // Questo impedisce a WrapLayout di collassare l'altezza a zero pixel
+        int colonne = 3; // Mostra 3 card per riga
+        int righe = (int) Math.ceil((double) lista.size() / colonne);
+        gridPanel.setLayout(new GridLayout(righe, colonne, 16, 16));
+
+        // Popola la griglia con le schede dei ristoranti
+        lista.forEach(this::addCard);
+
+        // Se l'ultima riga non è piena, aggiungiamo spazi vuoti invisibili per non spaginare i componenti di GridLayout
+        int celleVuote = (righe * colonne) - lista.size();
+        for (int i = 0; i < celleVuote; i++) {
+            JPanel dummy = new JPanel();
+            dummy.setOpaque(false);
+            gridPanel.add(dummy);
         }
-        textArea.setText(sb.toString());
-        textArea.setCaretPosition(0);
+
+        // Forza il calcolo strutturale delle altezze di Swing in modo sincrono
+        gridPanel.revalidate();
+        gridPanel.repaint();
+        scroll.revalidate();
+        scroll.repaint();
+        this.revalidate();
+        this.repaint();
     }
 
-    /** Dialog per aggiungere un ristorante ai preferiti tramite il nome. */
-    private void aggiungiPreferito() {
-        String nome = JOptionPane.showInputDialog(this,
-                "Nome del ristorante da aggiungere ai preferiti:",
-                "Aggiungi Preferito", JOptionPane.PLAIN_MESSAGE);
-        if (nome == null || nome.isBlank()) return;
+    private void addCard(Ristorante r) {
+        UITheme.CardPanel card = UITheme.cardPanel(new BorderLayout());
+        card.setPreferredSize(new Dimension(240, 140));
+        card.setMinimumSize(new Dimension(240, 140)); // Impedisce il totale schiacciamento
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
+        JPanel inner = new JPanel();
+        inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
+        inner.setBackground(UITheme.CARD);
+        inner.setBorder(new EmptyBorder(14, 16, 14, 16));
+
+        JPanel topRow = new JPanel(new BorderLayout());
+        topRow.setOpaque(false);
+        topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel badgeWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        badgeWrap.setOpaque(false);
+        badgeWrap.add(UITheme.badgeCucina(r.getTipoCucina()));
+        topRow.add(badgeWrap, BorderLayout.WEST);
+
+        JButton btnX = buildRemoveBtn(r);
+        topRow.add(btnX, BorderLayout.EAST);
+
+        JLabel nome = new JLabel(r.getNome());
+        nome.setFont(UITheme.FONT_H2);
+        nome.setForeground(UITheme.TEXT);
+        nome.setAlignmentX(Component.LEFT_ALIGNMENT);
+        nome.setBorder(new EmptyBorder(8, 0, 3, 0));
+
+        JLabel loc = new JLabel(r.getCitta() + "  ·  " + String.format("%.0f€", r.getFasciaPrezzo()));
+        loc.setFont(UITheme.FONT_SMALL);
+        loc.setForeground(UITheme.TEXT_MUTED);
+        loc.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        bottom.setOpaque(false);
+        bottom.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bottom.add(UITheme.starLabel(r.getMediaStelle(), r.getNumeroRecensioni()));
+        if (r.isDelivery()) bottom.add(UITheme.pillDelivery());
+        if (r.isPrenotazione()) bottom.add(UITheme.pillPrenotazione());
+
+        inner.add(topRow);
+        inner.add(nome);
+        inner.add(loc);
+        inner.add(Box.createVerticalStrut(8));
+        inner.add(bottom);
+        card.add(inner, BorderLayout.CENTER);
+
+        MouseAdapter ma = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getSource() == btnX) return;
+                parent.getDetailPanel().setRistorante(r);
+                parent.showCard(FancyFrame.CARD_DETAIL);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                card.setHovered(true);
+                inner.setBackground(UITheme.PRIMARY_LIGHT);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                card.setHovered(false);
+                inner.setBackground(UITheme.CARD);
+            }
+        };
+        card.addMouseListener(ma);
+        inner.addMouseListener(ma);
+
+        gridPanel.add(card);
+    }
+
+    private JButton buildRemoveBtn(Ristorante r) {
+        JButton btn = new JButton("×") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = UITheme.rh(g);
+                g2.setColor(new Color(254, 226, 226));
+                g2.fillOval(0, 0, getWidth(), getHeight());
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(UITheme.DANGER);
+        btn.setPreferredSize(new Dimension(24, 24));
+        btn.setMaximumSize(new Dimension(24, 24));
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setContentAreaFilled(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setToolTipText("Rimuovi dai preferiti");
+
+        btn.addActionListener(e -> rimuovi(r.getNome()));
+        return btn;
+    }
+
+    private void aggiungiManualeFlusso() {
+        if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isCliente()) {
+            JOptionPane.showMessageDialog(this, "Devi essere loggato come cliente per salvare i preferiti.",
+                    "Accesso negato", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(parent, "Aggiungi un ristorante ai preferiti", true);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setSize(420, 340);
+        dialog.setLocationRelativeTo(this);
+
+        JPanel mainBody = new JPanel(new BorderLayout(10, 10));
+        mainBody.setBorder(new EmptyBorder(15, 15, 15, 15));
+        mainBody.setBackground(Color.WHITE);
+
+        JPanel step1Panel = new JPanel(new BorderLayout(5, 5));
+        step1Panel.setOpaque(false);
+        JLabel lblCitta = new JLabel("1. Digita la città del ristorante:");
+        lblCitta.setFont(UITheme.FONT_BODY);
+        JTextField txtCitta = new JTextField();
+        JButton btnCerca = new JButton("Cerca Ristoranti");
+
+        step1Panel.add(lblCitta, BorderLayout.NORTH);
+        step1Panel.add(txtCitta, BorderLayout.CENTER);
+        step1Panel.add(btnCerca, BorderLayout.EAST);
+        mainBody.add(step1Panel, BorderLayout.NORTH);
+
+        JPanel step2Panel = new JPanel(new BorderLayout(5, 5));
+        step2Panel.setOpaque(false);
+        JLabel lblList = new JLabel("2. Seleziona il locale dalla lista:");
+        lblList.setFont(UITheme.FONT_BODY);
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        JList<String> ristoList = new JList<>(listModel);
+        ristoList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        ristoList.setFont(UITheme.FONT_BODY);
+        JScrollPane ristoScroll = new JScrollPane(ristoList);
+
+        step2Panel.add(lblList, BorderLayout.NORTH);
+        step2Panel.add(ristoScroll, BorderLayout.CENTER);
+        mainBody.add(step2Panel, BorderLayout.CENTER);
+
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        footer.setBackground(UITheme.BG);
+        JButton btnAnnulla = new JButton("Annulla");
+        JButton btnConferma = new JButton("Aggiungi");
+        btnConferma.setEnabled(false);
+        footer.add(btnAnnulla);
+        footer.add(btnConferma);
+
+        btnCerca.addActionListener(e -> {
+            String cittaInput = txtCitta.getText().trim();
+            if (cittaInput.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Inserisci una città valida.", "Attenzione", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            listModel.clear();
+            listModel.addElement("Ricerca in corso...");
+
+            new SwingWorker<List<Ristorante>, Void>() {
+                @Override
+                protected List<Ristorante> doInBackground() throws Exception {
+                    Request req = new Request(CommandType.CERCA_RISTORANTI, ClientTK.getUtenteLoggato().getUsername())
+                            .aggiungiParametro("citta", cittaInput);
+                    Response res = ClientTK.getConnessione().invia(req);
+                    return res.isSuccesso() ? res.getDatoTipizzato() : List.of();
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        List<Ristorante> trovati = get();
+                        listModel.clear();
+                        if (trovati == null || trovati.isEmpty()) {
+                            listModel.addElement("Nessun ristorante trovato in questa città.");
+                            btnConferma.setEnabled(false);
+                        } else {
+                            for (Ristorante r : trovati) {
+                                listModel.addElement(r.getNome());
+                            }
+                        }
+                    } catch (Exception ex) {
+                        listModel.clear();
+                        listModel.addElement("Errore di connessione.");
+                    }
+                }
+            }.execute();
+        });
+
+        ristoList.addListSelectionListener(e -> {
+            String sel = ristoList.getSelectedValue();
+            btnConferma.setEnabled(sel != null && !sel.equals("Ricerca in corso...") &&
+                    !sel.equals("Nessun ristorante trovato in questa città.") &&
+                    !sel.equals("Errore di connessione."));
+        });
+
+        btnConferma.addActionListener(e -> {
+            String ristoranteSelezionato = ristoList.getSelectedValue();
+            if (ristoranteSelezionato != null) {
+                try {
+                    Response r = ClientTK.getConnessione().invia(
+                            new Request(CommandType.CLIENTE_AGGIUNGI_PREFERITO, ClientTK.getUtenteLoggato().getUsername())
+                                    .aggiungiParametro("nomeRistorante", ristoranteSelezionato));
+                    if (r.isSuccesso()) {
+                        dialog.dispose();
+                        refreshData();
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, r.getMessaggio(), "Attenzione", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dialog, "Errore: " + ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        btnAnnulla.addActionListener(e -> dialog.dispose());
+
+        dialog.add(mainBody, BorderLayout.CENTER);
+        dialog.add(footer, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private void rimuovi(String nome) {
         try {
-            Request req = new Request(CommandType.CLIENTE_AGGIUNGI_PREFERITO,
-                                      ClientTK.getUtenteLoggato().getUsername())
-                    .aggiungiParametro("nomeRistorante", nome.trim());
-            Response resp = ClientTK.getConnessione().invia(req);
-            JOptionPane.showMessageDialog(this, resp.getMessaggio(),
-                    resp.isSuccesso() ? "OK" : "Attenzione",
-                    resp.isSuccesso()
-                        ? JOptionPane.INFORMATION_MESSAGE
-                        : JOptionPane.WARNING_MESSAGE);
-            if (resp.isSuccesso()) refreshData();
+            Response r = ClientTK.getConnessione().invia(
+                    new Request(CommandType.CLIENTE_RIMUOVI_PREFERITO,
+                            ClientTK.getUtenteLoggato().getUsername())
+                            .aggiungiParametro("nomeRistorante", nome));
+            if (r.isSuccesso()) refreshData();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Errore: " + ex.getMessage(),
+            JOptionPane.showMessageDialog(this, "Impossibile rimuovere: " + ex.getMessage(),
                     "Errore", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    /** Dialog per rimuovere un ristorante dalla lista tramite selezione. */
-    private void rimuoviPreferito() {
-        if (preferitiCorrente.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Non hai ristoranti preferiti da rimuovere.");
-            return;
-        }
-
-        JComboBox<String> combo = new JComboBox<>(
-                preferitiCorrente.stream()
-                                 .map(Ristorante::getNome)
-                                 .toArray(String[]::new));
-
-        if (JOptionPane.showConfirmDialog(this, combo,
-                "Rimuovi Preferito", JOptionPane.OK_CANCEL_OPTION)
-                != JOptionPane.OK_OPTION) return;
-
-        String scelto = (String) combo.getSelectedItem();
-        try {
-            Request req = new Request(CommandType.CLIENTE_RIMUOVI_PREFERITO,
-                                      ClientTK.getUtenteLoggato().getUsername())
-                    .aggiungiParametro("nomeRistorante", scelto);
-            Response resp = ClientTK.getConnessione().invia(req);
-            JOptionPane.showMessageDialog(this, resp.getMessaggio());
-            if (resp.isSuccesso()) refreshData();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Errore: " + ex.getMessage(),
-                    "Errore", JOptionPane.ERROR_MESSAGE);
-        }
+    private void aggiungiLabel(String txt) {
+        gridPanel.removeAll();
+        gridPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JLabel l = new JLabel(txt);
+        l.setFont(UITheme.FONT_BODY);
+        l.setForeground(UITheme.TEXT_MUTED);
+        l.setBorder(new EmptyBorder(25, 10, 0, 0));
+        gridPanel.add(l);
+        gridPanel.revalidate();
+        gridPanel.repaint();
     }
 }

@@ -1,316 +1,679 @@
 /**
- * TheKnife – Modulo Client
- * Pannello gestione recensioni.
+ * TheKnife – Pannello recensioni.
  *
- * @author Matteo Vigano  – 760537 – sede CO
- * @author Fabio Vecaj    – 761232 – sede CO
+ * @author Matteo Vigano      – 760537 – sede CO
+ * @author Fabio Vecaj        – 761232 – sede CO
+ * @author De Zuane Samuele   – 763267 – sede CO
  */
-
 package it.uninsubria.theknife.client.gui.panels;
 
 import it.uninsubria.theknife.client.ClientTK;
-import it.uninsubria.theknife.client.gui.FancyFrame;
-import it.uninsubria.theknife.client.gui.GradientPanel;
+import it.uninsubria.theknife.client.gui.*;
 import it.uninsubria.theknife.common.CommandType;
 import it.uninsubria.theknife.common.Request;
 import it.uninsubria.theknife.common.Response;
 import it.uninsubria.theknife.common.model.Recensione;
+import it.uninsubria.theknife.common.model.Ristorante;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Pannello per la gestione completa delle recensioni.
- * <p>
- * <b>Clienti:</b> visualizzano le proprie recensioni e possono
- * inserire, modificare o eliminare.
- * </p>
- * <p>
- * <b>Ristoratori:</b> visualizzano le recensioni dei propri ristoranti
- * e possono rispondere (al massimo una volta per recensione).
- * </p>
- * <p>
- * Tutte le operazioni vengono delegate al server tramite il protocollo
- * {@link it.uninsubria.theknife.common.CommandType}.
- * </p>
+ * Pannello di gestione recensioni per Clienti e Ristoratori.
+ * Layout moderno, dialog strutturati con selezione basata su città e rendering Java2D nativo per evitare bug di font.
  */
 public class RecensioniPanel extends GradientPanel {
 
     private final FancyFrame parent;
-    private final JTextArea  textArea = new JTextArea();
 
-    private final JButton btnNuova    = new JButton("Nuova Recensione");
-    private final JButton btnModifica = new JButton("Modifica");
-    private final JButton btnElimina  = new JButton("Elimina");
-    private final JButton btnRispondi = new JButton("Rispondi (Ristoratore)");
+    private List<Recensione>   cache        = List.of();
+    private int                filtroStelle = 0;
 
-    /** Cache delle recensioni mostrate, usata dai dialog di modifica/elimina/risposta. */
-    private List<Recensione> recensioniCorrente = List.of();
+    private final UITheme.StarChip[] starChips = new UITheme.StarChip[6];
+    private final JPanel     cardArea   = new JPanel();
+    private final JLabel     lblCount   = new JLabel("");
+    private final JLabel     lblTitolo  = new JLabel("Recensioni");
 
-    /**
-     * @param parent frame principale
-     */
+    private final UITheme.TKButton btnNuova    = UITheme.btnPrimary("+ Nuova recensione");
+    private final UITheme.TKButton btnModifica = UITheme.btnGhost("Modifica");
+    private final UITheme.TKButton btnElimina  = UITheme.btnDanger("Elimina");
+    private final UITheme.TKButton btnRispondi = UITheme.btnPrimary("Rispondi");
+
     public RecensioniPanel(FancyFrame parent) {
-        super(new Color(220, 220, 220), new Color(200, 200, 200));
+        super(new BorderLayout());
         this.parent = parent;
+        setBackground(UITheme.BG);
         initUI();
     }
 
+    // =========================================================================
+    // COSTRUZIONE INTERFACCIA GRAFICA (UI)
+    // =========================================================================
+
     private void initUI() {
-        setLayout(new BorderLayout());
+        add(buildTopBar(), BorderLayout.NORTH);
 
-        JLabel lbl = new JLabel("Recensioni", SwingConstants.CENTER);
-        lbl.setFont(new Font("SansSerif", Font.BOLD, 20));
-        add(lbl, BorderLayout.NORTH);
+        cardArea.setLayout(new BoxLayout(cardArea, BoxLayout.Y_AXIS));
+        cardArea.setBackground(UITheme.BG);
+        cardArea.setBorder(new EmptyBorder(16, 24, 24, 24));
 
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
-        add(new JScrollPane(textArea), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(cardArea);
+        scroll.setBorder(null); 
+        scroll.setBackground(UITheme.BG);
+        scroll.getViewport().setBackground(UITheme.BG);
+        scroll.getVerticalScrollBar().setUnitIncrement(18);
+        add(scroll, BorderLayout.CENTER);
+        
+        add(buildBottomBar(), BorderLayout.SOUTH);
+    }
 
-        JPanel bottom = new JPanel();
-        bottom.add(btnNuova);
-        bottom.add(btnModifica);
-        bottom.add(btnElimina);
-        bottom.add(btnRispondi);
-        add(bottom, BorderLayout.SOUTH);
+    private JPanel buildTopBar() {
+        JPanel bar = new JPanel(new BorderLayout(0, 14));
+        bar.setBackground(Color.WHITE);
+        bar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.CARD_BORDER),
+                new EmptyBorder(18, 24, 16, 24)));
 
-        btnNuova.addActionListener(e    -> nuovaRecensione());
-        btnModifica.addActionListener(e -> modificaRecensione());
+        JPanel titleRow = new JPanel(new BorderLayout()); 
+        titleRow.setOpaque(false);
+        lblTitolo.setFont(UITheme.FONT_H1); 
+        lblTitolo.setForeground(UITheme.TEXT);
+        lblCount.setFont(UITheme.FONT_SMALL); 
+        lblCount.setForeground(UITheme.TEXT_MUTED);
+        titleRow.add(lblTitolo, BorderLayout.WEST);
+        titleRow.add(lblCount,  BorderLayout.EAST);
+        bar.add(titleRow, BorderLayout.NORTH);
+
+        JPanel starRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        starRow.setOpaque(false);
+        JLabel lbl = new JLabel("Filtra per stelle:");
+        lbl.setFont(UITheme.FONT_LABEL); 
+        lbl.setForeground(UITheme.TEXT_MUTED);
+        starRow.add(lbl);
+
+        starChips[0] = UITheme.starChip("Tutte", 0);
+        starChips[0].addActionListener(e -> filtra(0));
+        starRow.add(starChips[0]);
+
+        for (int i = 1; i <= 5; i++) {
+            final int val = i;
+            starChips[i] = UITheme.starChip("", i);
+            starChips[i].addActionListener(e -> filtra(val));
+            starRow.add(starChips[i]);
+        }
+        starChips[0].setSelected(true);
+        bar.add(starRow, BorderLayout.SOUTH);
+        return bar;
+    }
+
+    private JPanel buildBottomBar() {
+        JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 14));
+        bar.setBackground(Color.WHITE);
+        bar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UITheme.CARD_BORDER));
+        
         btnElimina.addActionListener(e  -> eliminaRecensione());
+        btnModifica.addActionListener(e -> modificaRecensione());
         btnRispondi.addActionListener(e -> rispondiRecensione());
+        btnNuova.addActionListener(e    -> nuovaRecensione());
+        
+        bar.add(btnElimina); 
+        bar.add(btnModifica);
+        bar.add(btnRispondi); 
+        bar.add(btnNuova);
+        return bar;
     }
 
-    /**
-     * Ricarica le recensioni dal server.
-     * <ul>
-     *   <li>Cliente loggato: carica le proprie recensioni</li>
-     *   <li>Ristoratore loggato: carica le recensioni dei suoi ristoranti</li>
-     *   <li>Guest: mostra messaggio di accesso richiesto</li>
-     * </ul>
-     */
+    // =========================================================================
+    // LOGICA DI CARICAMENTO E FILTRAGGIO
+    // =========================================================================
+
     public void refreshData() {
-        textArea.setText("");
-        recensioniCorrente = List.of();
-
-        if (!ClientTK.isLoggato()) {
-            textArea.setText("Effettua il login per gestire le recensioni.");
-            aggiornaVisibilitaPulsanti();
-            return;
-        }
-
-        boolean isCliente = ClientTK.getUtenteLoggato().isCliente();
-        CommandType cmd = isCliente
-                ? CommandType.CLIENTE_VISUALIZZA_MIE_RECENSIONI
-                : CommandType.RISTORATORE_VISUALIZZA_RECENSIONI;
-
-        try {
-            Request req = new Request(cmd, ClientTK.getUtenteLoggato().getUsername());
-            Response resp = ClientTK.getConnessione().invia(req);
-
-            if (resp.isSuccesso()) {
-                recensioniCorrente = resp.getDatoTipizzato();
-                stampaRecensioni(recensioniCorrente, isCliente);
-            } else {
-                textArea.setText("Errore: " + resp.getMessaggio());
-            }
-        } catch (Exception ex) {
-            textArea.setText("Errore di connessione: " + ex.getMessage());
-        }
-
+        cardArea.removeAll(); 
+        cache = List.of();
         aggiornaVisibilitaPulsanti();
-    }
-
-    /** Scrive le recensioni nell'area di testo. */
-    private void stampaRecensioni(List<Recensione> lista, boolean isCliente) {
-        if (lista.isEmpty()) {
-            textArea.setText(isCliente
-                    ? "Non hai ancora scritto recensioni."
-                    : "Nessuna recensione per i tuoi ristoranti.");
+        
+        if (!ClientTK.isLoggato()) {
+            lblTitolo.setText("Recensioni");
+            addLabel("Accedi al sistema per visualizzare o gestire le tue recensioni."); 
             return;
         }
+        
+        boolean isCliente = ClientTK.getUtenteLoggato().isCliente();
+        lblTitolo.setText(isCliente ? "Le mie recensioni" : "Recensioni ricevute");
+        
+        CommandType cmd = isCliente ? CommandType.CLIENTE_VISUALIZZA_MIE_RECENSIONI
+                                    : CommandType.RISTORATORE_VISUALIZZA_RECENSIONI;
+        addLabel("Sincronizzazione archivio recensioni...");
+        
+        new SwingWorker<List<Recensione>, Void>() {
+            @Override 
+            protected List<Recensione> doInBackground() throws Exception {
+                Response r = ClientTK.getConnessione().invia(
+                        new Request(cmd, ClientTK.getUtenteLoggato().getUsername()));
+                return r.isSuccesso() ? r.getDatoTipizzato() : List.of();
+            }
+            @Override 
+            protected void done() {
+                try { 
+                    cache = get(); 
+                    filtra(0); 
+                } catch (Exception ex) { 
+                    cardArea.removeAll(); 
+                    addLabel("Impossibile caricare i dati: " + ex.getMessage()); 
+                }
+            }
+        }.execute();
+    }
 
-        StringBuilder sb = new StringBuilder();
-        for (Recensione r : lista) {
-            sb.append("Ristorante: ").append(r.getNomeRistorante()).append('\n');
-            if (!isCliente) sb.append("Autore: ").append(r.getUsernameCliente()).append('\n');
-            sb.append(r.getStelle()).append("★  ").append(r.getTesto()).append('\n');
-            if (r.hasRisposta()) sb.append("↳ Risposta: ").append(r.getRisposta()).append('\n');
-            sb.append("──────────────\n");
+    private void filtra(int stelle) {
+        filtroStelle = stelle;
+        for (int i = 0; i <= 5; i++) {
+            if (starChips[i] != null) starChips[i].setSelected(i == stelle);
         }
-        textArea.setText(sb.toString());
-        textArea.setCaretPosition(0);
+
+        List<Recensione> filt = stelle == 0 ? cache
+                : cache.stream().filter(r -> r.getStelle() == stelle).collect(Collectors.toList());
+
+        cardArea.removeAll();
+        boolean isC = ClientTK.isLoggato() && ClientTK.getUtenteLoggato().isCliente();
+
+        if (filt.isEmpty()) {
+            addLabel(stelle == 0 ? "Nessuna recensione registrata nel sistema."
+                    : "Non sono presenti recensioni con una valutazione di " + stelle + " stelle.");
+        } else {
+            filt.forEach(r -> {
+                cardArea.add(buildRecCard(r, isC));
+                cardArea.add(Box.createVerticalStrut(14)); // Spazio uniforme tra le card
+            });
+        }
+        int tot = filt.size();
+        lblCount.setText(tot + (tot == 1 ? " recensione trovata" : " recensioni trovate"));
+        cardArea.revalidate(); 
+        cardArea.repaint();
     }
 
-    /** Mostra/nasconde i pulsanti in base al ruolo dell'utente. */
-    private void aggiornaVisibilitaPulsanti() {
-        boolean loggedIn   = ClientTK.isLoggato();
-        boolean isCliente  = loggedIn && ClientTK.getUtenteLoggato().isCliente();
-        boolean isRist     = loggedIn && ClientTK.getUtenteLoggato().isRistoratore();
+    // =========================================================================
+    // RENDERING CARD COMPATTE (CON RIGIDO FIX SUI MARGINI E PADDING)
+    // =========================================================================
 
-        btnNuova.setVisible(isCliente);
-        btnModifica.setVisible(isCliente);
-        btnElimina.setVisible(isCliente);
-        btnRispondi.setVisible(isRist);
+    private JPanel buildRecCard(Recensione rec, boolean showRistorante) {
+        UITheme.CardPanel card = UITheme.cardPanel(new BorderLayout(0, 10));
+
+        JPanel inner = new JPanel(new BorderLayout(0, 12));
+        inner.setBackground(UITheme.CARD);
+        inner.setBorder(new EmptyBorder(18, 20, 18, 20)); // Padding generoso interno alla card
+
+        // Intestazione Card
+        JPanel head = new JPanel(new BorderLayout(0, 4)); 
+        head.setOpaque(false);
+
+        JPanel leftHead = new JPanel(new BorderLayout(0, 2)); 
+        leftHead.setOpaque(false);
+        String mainTxt = showRistorante ? rec.getNomeRistorante() : rec.getUsernameCliente();
+        JLabel mainLbl = new JLabel(mainTxt); 
+        mainLbl.setFont(UITheme.FONT_H3); 
+        mainLbl.setForeground(UITheme.TEXT);
+        leftHead.add(mainLbl, BorderLayout.NORTH);
+
+        if (!showRistorante) {
+            JLabel subLbl = new JLabel(rec.getNomeRistorante());
+            subLbl.setFont(UITheme.FONT_SMALL); 
+            subLbl.setForeground(UITheme.TEXT_MUTED);
+            leftHead.add(subLbl, BorderLayout.CENTER);
+        }
+        head.add(leftHead, BorderLayout.WEST);
+
+        JPanel starsPanel = buildStarsPanel(rec.getStelle());
+        head.add(starsPanel, BorderLayout.EAST);
+        inner.add(head, BorderLayout.NORTH);
+
+        // Corpo del Testo con font standard sicuro e pulito
+        JLabel testo = new JLabel("<html><body style='width:580px; margin:0; font-family:Segoe UI; line-height:14px;'>" + rec.getTesto() + "</body></html>");
+        testo.setFont(UITheme.FONT_BODY); 
+        testo.setForeground(UITheme.TEXT);
+        testo.setBorder(new EmptyBorder(4, 2, 4, 2));
+        inner.add(testo, BorderLayout.CENTER);
+
+        // Sezione Risposta
+        if (rec.hasRisposta()) {
+            JPanel reply = new JPanel(new BorderLayout(0, 6));
+            reply.setBackground(UITheme.INFO_BG);
+            reply.setOpaque(true);
+            reply.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 4, 0, 0, UITheme.INFO_FG),
+                    new EmptyBorder(12, 14, 12, 14)));
+
+            JLabel rl = new JLabel("Risposta del ristoratore");
+            rl.setFont(UITheme.FONT_LABEL); 
+            rl.setForeground(UITheme.INFO_FG);
+            
+            JLabel rt = new JLabel("<html><body style='width:550px; margin:0; font-family:Segoe UI;'>" + rec.getRisposta() + "</body></html>");
+            rt.setFont(UITheme.FONT_BODY); 
+            rt.setForeground(UITheme.TEXT);
+            
+            reply.add(rl, BorderLayout.NORTH);
+            reply.add(rt, BorderLayout.CENTER);
+            inner.add(reply, BorderLayout.SOUTH);
+        }
+
+        card.add(inner, BorderLayout.CENTER);
+        card.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return card;
     }
 
-    /* ---- Azioni cliente ---------------------------------------------- */
+    private static JPanel buildStarsPanel(int stelle) {
+        JPanel p = new JPanel() {
+            @Override 
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = UITheme.rh(g);
+                g2.setColor(UITheme.STAR);
+                float sz = 9f, gap = 3f, startX = 2f, cy = getHeight() / 2f;
+                for (int i = 0; i < 5; i++) {
+                    float cx = startX + i * (sz + gap) + sz / 2;
+                    UITheme.drawStar(g2, cx, cy, sz / 2, sz / 2 * 0.42f, i < stelle);
+                }
+                g2.dispose();
+            }
+            @Override public Dimension getPreferredSize() { return new Dimension(70, 20); }
+            @Override public Dimension getMinimumSize()   { return new Dimension(70, 20); }
+            @Override public boolean   isOpaque()         { return false; }
+        };
+        p.setOpaque(false);
+        return p;
+    }
+
+    // =========================================================================
+    // AZIONI DI INTERAZIONE E MODIFICA DATI
+    // =========================================================================
 
     private void nuovaRecensione() {
         if (!checkCliente()) return;
 
-        String nomeRist = JOptionPane.showInputDialog(this,
-                "Nome del ristorante:", "Nuova Recensione", JOptionPane.PLAIN_MESSAGE);
-        if (nomeRist == null || nomeRist.isBlank()) return;
-
-        JSpinner spinStelle = new JSpinner(new SpinnerNumberModel(3, 1, 5, 1));
-        JTextArea txtTesto  = new JTextArea(3, 20);
-        txtTesto.setLineWrap(true);
-
-        Object[] msg = {"Stelle (1–5):", spinStelle,
-                        "Testo:", new JScrollPane(txtTesto)};
-
-        if (JOptionPane.showConfirmDialog(this, msg, "Nuova Recensione",
-                JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
-
-        try {
-            Request req = new Request(CommandType.CLIENTE_AGGIUNGI_RECENSIONE,
-                                      ClientTK.getUtenteLoggato().getUsername())
-                    .aggiungiParametro("nomeRistorante", nomeRist.trim())
-                    .aggiungiParametro("stelle", (Integer) spinStelle.getValue())
-                    .aggiungiParametro("testo",  txtTesto.getText().trim());
-            Response resp = ClientTK.getConnessione().invia(req);
-            JOptionPane.showMessageDialog(this, resp.getMessaggio(),
-                    resp.isSuccesso() ? "OK" : "Errore",
-                    resp.isSuccesso()
-                        ? JOptionPane.INFORMATION_MESSAGE
-                        : JOptionPane.ERROR_MESSAGE);
-            if (resp.isSuccesso()) refreshData();
-        } catch (Exception ex) {
-            mostraErroreRete(ex);
+        // FIX LOGICO: Chiediamo prima la città per inviare una richiesta valida al server
+        String cittaInput = JOptionPane.showInputDialog(this, "In quale città si trova il ristorante?", "Nuova Recensione", JOptionPane.QUESTION_MESSAGE);
+        if (cittaInput == null || cittaInput.trim().isBlank()) {
+            return;
         }
+        
+        final String cittaCercata = cittaInput.trim();
+        addLabel("Ricerca dei locali attivi a " + cittaCercata + "...");
+
+        new SwingWorker<List<Ristorante>, Void>() {
+            @Override
+            protected List<Ristorante> doInBackground() throws Exception {
+                // Inviamo la città inserita per popolare correttamente la lista
+                Response r = ClientTK.getConnessione().invia(
+                        new Request(CommandType.CERCA_RISTORANTI, null).aggiungiParametro("citta", cittaCercata));
+                return r.isSuccesso() ? r.getDatoTipizzato() : List.of();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Ristorante> disponibili = get();
+                    if (disponibili.isEmpty()) {
+                        toast("Nessun ristorante trovato nella città di '" + cittaCercata + "'.", false);
+                        filtra(filtroStelle);
+                        return;
+                    }
+
+                    Window w = SwingUtilities.getWindowAncestor(RecensioniPanel.this);
+                    FancyReviewSelectionDialog selectionDialog = new FancyReviewSelectionDialog(w, disponibili, cittaCercata);
+                    selectionDialog.setVisible(true);
+
+                    if (!selectionDialog.isSelezionato()) {
+                        filtra(filtroStelle);
+                        return;
+                    }
+
+                    String ristoranteScelto = selectionDialog.getNomeSelezionato();
+                    RecensioneDialog dlg = new RecensioneDialog(w, ristoranteScelto, 3, "");
+                    dlg.setVisible(true);
+                    
+                    if (!dlg.isConfermato()) {
+                        filtra(filtroStelle);
+                        return;
+                    }
+
+                    Response r = ClientTK.getConnessione().invia(
+                            new Request(CommandType.CLIENTE_AGGIUNGI_RECENSIONE, ClientTK.getUtenteLoggato().getUsername())
+                                    .aggiungiParametro("nomeRistorante", ristoranteScelto)
+                                    .aggiungiParametro("stelle", dlg.getStelle())
+                                    .aggiungiParametro("testo", dlg.getTesto()));
+                    
+                    toast(r.getMessaggio(), r.isSuccesso());
+                    refreshData();
+
+                } catch (Exception ex) {
+                    toast("Errore durante il recupero: " + ex.getMessage(), false);
+                    filtra(filtroStelle);
+                }
+            }
+        }.execute();
     }
 
     private void modificaRecensione() {
-        if (!checkCliente()) return;
-        if (recensioniCorrente.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Non hai recensioni da modificare.");
-            return;
-        }
-
-        JComboBox<String> combo = buildComboRecensioni(recensioniCorrente);
-        JSpinner spinStelle     = new JSpinner(new SpinnerNumberModel(3, 1, 5, 1));
-        JTextArea txtTesto      = new JTextArea(3, 20);
-        txtTesto.setLineWrap(true);
-
-        Object[] msg = {"Recensione:", combo, "Nuove stelle:", spinStelle,
-                        "Nuovo testo:", new JScrollPane(txtTesto)};
-
-        if (JOptionPane.showConfirmDialog(this, msg, "Modifica Recensione",
-                JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
-
-        Recensione sel = recensioniCorrente.get(combo.getSelectedIndex());
+        if (!checkCliente() || cache.isEmpty()) return;
+        Recensione sel = scegliRecensione("Seleziona la recensione da modificare");
+        if (sel == null) return;
+        
+        RecensioneDialog dlg = new RecensioneDialog(
+                SwingUtilities.getWindowAncestor(this), sel.getNomeRistorante(), sel.getStelle(), sel.getTesto());
+        dlg.setVisible(true);
+        if (!dlg.isConfermato()) return;
+        
         try {
-            Request req = new Request(CommandType.CLIENTE_MODIFICA_RECENSIONE,
-                                      ClientTK.getUtenteLoggato().getUsername())
-                    .aggiungiParametro("nomeRistorante", sel.getNomeRistorante())
-                    .aggiungiParametro("stelle", (Integer) spinStelle.getValue())
-                    .aggiungiParametro("testo",  txtTesto.getText().trim());
-            Response resp = ClientTK.getConnessione().invia(req);
-            JOptionPane.showMessageDialog(this, resp.getMessaggio());
-            if (resp.isSuccesso()) refreshData();
-        } catch (Exception ex) {
-            mostraErroreRete(ex);
-        }
+            Response r = ClientTK.getConnessione().invia(
+                    new Request(CommandType.CLIENTE_MODIFICA_RECENSIONE, ClientTK.getUtenteLoggato().getUsername())
+                            .aggiungiParametro("nomeRistorante", sel.getNomeRistorante())
+                            .aggiungiParametro("stelle", dlg.getStelle())
+                            .aggiungiParametro("testo", dlg.getTesto()));
+            toast(r.getMessaggio(), r.isSuccesso());
+            if (r.isSuccesso()) refreshData();
+        } catch (Exception ex) { toast("Errore: " + ex.getMessage(), false); }
     }
 
     private void eliminaRecensione() {
-        if (!checkCliente()) return;
-        if (recensioniCorrente.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Non hai recensioni da eliminare.");
-            return;
-        }
-
-        JComboBox<String> combo = buildComboRecensioni(recensioniCorrente);
-        if (JOptionPane.showConfirmDialog(this, combo, "Elimina Recensione",
-                JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
-
-        Recensione sel = recensioniCorrente.get(combo.getSelectedIndex());
+        if (!checkCliente() || cache.isEmpty()) return;
+        Recensione sel = scegliRecensione("Seleziona la recensione da eliminare");
+        if (sel == null) return;
+        
+        int c = JOptionPane.showConfirmDialog(this, "Eliminare definitivamente la recensione per \"" + sel.getNomeRistorante() + "\"?",
+                "Conferma Rimozione", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (c != JOptionPane.YES_OPTION) return;
+        
         try {
-            Request req = new Request(CommandType.CLIENTE_ELIMINA_RECENSIONE,
-                                      ClientTK.getUtenteLoggato().getUsername())
-                    .aggiungiParametro("nomeRistorante", sel.getNomeRistorante());
-            Response resp = ClientTK.getConnessione().invia(req);
-            JOptionPane.showMessageDialog(this, resp.getMessaggio());
-            if (resp.isSuccesso()) refreshData();
-        } catch (Exception ex) {
-            mostraErroreRete(ex);
-        }
+            Response r = ClientTK.getConnessione().invia(
+                    new Request(CommandType.CLIENTE_ELIMINA_RECENSIONE, ClientTK.getUtenteLoggato().getUsername())
+                            .aggiungiParametro("nomeRistorante", sel.getNomeRistorante()));
+            toast(r.getMessaggio(), r.isSuccesso());
+            if (r.isSuccesso()) refreshData();
+        } catch (Exception ex) { toast("Errore: " + ex.getMessage(), false); }
     }
-
-    /* ---- Azioni ristoratore ------------------------------------------ */
 
     private void rispondiRecensione() {
-        if (!checkRistoratore()) return;
-        if (recensioniCorrente.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nessuna recensione a cui rispondere.");
-            return;
-        }
-
-        JComboBox<String> combo = buildComboRecensioni(recensioniCorrente);
-        JTextArea txtRisposta   = new JTextArea(3, 20);
-        txtRisposta.setLineWrap(true);
-
-        Object[] msg = {"Recensione:", combo,
-                        "Risposta:", new JScrollPane(txtRisposta)};
-
-        if (JOptionPane.showConfirmDialog(this, msg, "Rispondi",
-                JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
-
-        Recensione sel = recensioniCorrente.get(combo.getSelectedIndex());
+        if (!checkRistoratore() || cache.isEmpty()) return;
+        Recensione sel = scegliRecensione("A quale recensione vuoi rispondere?");
+        if (sel == null) return;
+        
+        RispostaDialog dlg = new RispostaDialog(SwingUtilities.getWindowAncestor(this),
+                sel.getNomeRistorante(), sel.getUsernameCliente(),
+                sel.hasRisposta() ? sel.getRisposta() : "");
+        dlg.setVisible(true);
+        if (!dlg.isConfermato()) return;
+        
         try {
-            Request req = new Request(CommandType.RISTORATORE_RISPONDI_RECENSIONE,
-                                      ClientTK.getUtenteLoggato().getUsername())
-                    .aggiungiParametro("nomeRistorante",  sel.getNomeRistorante())
-                    .aggiungiParametro("usernameCliente", sel.getUsernameCliente())
-                    .aggiungiParametro("risposta",        txtRisposta.getText().trim());
-            Response resp = ClientTK.getConnessione().invia(req);
-            JOptionPane.showMessageDialog(this, resp.getMessaggio());
-            if (resp.isSuccesso()) refreshData();
-        } catch (Exception ex) {
-            mostraErroreRete(ex);
-        }
+            Response r = ClientTK.getConnessione().invia(
+                    new Request(CommandType.RISTORATORE_RISPONDI_RECENSIONE, ClientTK.getUtenteLoggato().getUsername())
+                            .aggiungiParametro("nomeRistorante", sel.getNomeRistorante())
+                            .aggiungiParametro("usernameCliente", sel.getUsernameCliente())
+                            .aggiungiParametro("risposta", dlg.getRisposta()));
+            toast(r.getMessaggio(), r.isSuccesso());
+            if (r.isSuccesso()) refreshData();
+        } catch (Exception ex) { toast("Errore: " + ex.getMessage(), false); }
     }
 
-    /* ---- Helpers -------------------------------------------------------- */
+    // =========================================================================
+    // POPUP DI SELEZIONE E METODI INTERNI DI APPOGGIO
+    // =========================================================================
 
-    private JComboBox<String> buildComboRecensioni(List<Recensione> lista) {
-        return new JComboBox<>(lista.stream()
-                .map(r -> r.getNomeRistorante() + " – " + r.getStelle() + "★")
-                .toArray(String[]::new));
+    private Recensione scegliRecensione(String titolo) {
+        List<Recensione> lista = filtroStelle == 0 ? cache
+                : cache.stream().filter(r -> r.getStelle() == filtroStelle).collect(Collectors.toList());
+        if (lista.isEmpty()) { toast("Nessuna recensione disponibile con questo filtro.", false); return null; }
+        
+        String[] labels = lista.stream()
+                .map(r -> r.getNomeRistorante() + " (" + r.getStelle() + " stelle)")
+                .toArray(String[]::new);
+                
+        JComboBox<String> combo = new JComboBox<>(labels); 
+        combo.setFont(UITheme.FONT_BODY);
+        combo.setBackground(Color.WHITE);
+        
+        int res = JOptionPane.showConfirmDialog(this, combo, titolo, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        return res == JOptionPane.OK_OPTION ? lista.get(combo.getSelectedIndex()) : null;
+    }
+
+    private void aggiornaVisibilitaPulsanti() {
+        boolean isC = ClientTK.isLoggato() && ClientTK.getUtenteLoggato().isCliente();
+        boolean isR = ClientTK.isLoggato() && ClientTK.getUtenteLoggato().isRistoratore();
+        btnNuova.setVisible(isC); btnModifica.setVisible(isC);
+        btnElimina.setVisible(isC); btnRispondi.setVisible(isR);
     }
 
     private boolean checkCliente() {
-        if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isCliente()) {
-            JOptionPane.showMessageDialog(this, "Devi essere loggato come cliente.",
-                    "Accesso negato", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-        return true;
+        if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isCliente()) { toast("Azione riservata agli account cliente.", false); return false; } return true;
     }
-
     private boolean checkRistoratore() {
-        if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isRistoratore()) {
-            JOptionPane.showMessageDialog(this, "Devi essere loggato come ristoratore.",
-                    "Accesso negato", JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-        return true;
+        if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isRistoratore()) { toast("Azione riservata ai gestori delle attività.", false); return false; } return true;
+    }
+    private void toast(String msg, boolean ok) {
+        UIManager.put("OptionPane.background", Color.WHITE);
+        UIManager.put("Panel.background", Color.WHITE);
+        JOptionPane.showMessageDialog(this, "<html><body style='width:300px; font-family:Segoe UI;'>" + msg + "</body></html>", ok ? "Esito" : "Attenzione",
+                ok ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
+    }
+    private void addLabel(String txt) {
+        cardArea.removeAll();
+        JLabel l = new JLabel(txt); l.setFont(UITheme.FONT_BODY); l.setForeground(UITheme.TEXT_MUTED);
+        l.setBorder(new EmptyBorder(30, 12, 0, 0)); l.setAlignmentX(Component.LEFT_ALIGNMENT);
+        cardArea.add(l); cardArea.revalidate(); cardArea.repaint();
     }
 
-    private void mostraErroreRete(Exception ex) {
-        JOptionPane.showMessageDialog(this,
-                "Errore di connessione: " + ex.getMessage(),
-                "Errore", JOptionPane.ERROR_MESSAGE);
+    // =========================================================================
+    // DIALOG DI SELEZIONE RISTORANTE SU BASE CITTÀ
+    // =========================================================================
+
+    private static class FancyReviewSelectionDialog extends JDialog {
+        private boolean selezionato = false;
+        private final JComboBox<String> cmbLista;
+
+        public FancyReviewSelectionDialog(Window owner, List<Ristorante> lista, String citta) {
+            super(owner, "Nuova recensione", ModalityType.APPLICATION_MODAL);
+            setSize(540, 260);
+            setLocationRelativeTo(owner);
+            setResizable(false);
+
+            JPanel root = new JPanel(new BorderLayout(16, 16));
+            root.setBackground(Color.WHITE);
+            root.setBorder(new EmptyBorder(24, 24, 24, 24));
+
+            JLabel title = new JLabel("Locali disponibili a " + citta);
+            title.setFont(UITheme.FONT_H2);
+            title.setForeground(UITheme.TEXT);
+            root.add(title, BorderLayout.NORTH);
+
+            String[] elementi = lista.stream().map(Ristorante::getNome).toArray(String[]::new);
+            cmbLista = new JComboBox<>(elementi);
+            cmbLista.setFont(UITheme.FONT_BODY);
+            cmbLista.setBackground(Color.WHITE);
+
+            JPanel mid = new JPanel(new BorderLayout(0, 10));
+            mid.setOpaque(false);
+            mid.add(new JLabel("Seleziona quale ristorante vuoi recensire di questa città:"), BorderLayout.NORTH);
+            mid.add(cmbLista, BorderLayout.CENTER);
+            root.add(mid, BorderLayout.CENTER);
+
+            JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+            footer.setOpaque(false);
+            UITheme.TKButton btnC = UITheme.btnGhost("Annulla");
+            UITheme.TKButton btnO = UITheme.btnPrimary("Procedi");
+
+            btnC.addActionListener(e -> dispose());
+            btnO.addActionListener(e -> {
+                if (cmbLista.getSelectedIndex() != -1) {
+                    selezionato = true;
+                    dispose();
+                }
+            });
+            footer.add(btnC); footer.add(btnO);
+            root.add(footer, BorderLayout.SOUTH);
+            setContentPane(root);
+        }
+
+        public boolean isSelezionato() { return selezionato; }
+        public String getNomeSelezionato() {
+            return (String) cmbLista.getSelectedItem();
+        }
+    }
+
+    // =========================================================================
+    // DIALOG COMPILAZIONE RECENSIONE
+    // =========================================================================
+
+    public static class RecensioneDialog extends JDialog {
+        private boolean conf = false;
+        private final JSlider   slStelle = new JSlider(1, 5, 3);
+        private final JPanel    starsPreview;
+        private final JTextArea txtTesto;
+
+        public RecensioneDialog(Window owner, String nome, int stelle, String testo) {
+            super(owner, "Compila Recensione – " + nome, ModalityType.APPLICATION_MODAL);
+            setSize(560, 490);
+            setLocationRelativeTo(owner); 
+            setResizable(false);
+            
+            txtTesto = new JTextArea(10, 36);
+            txtTesto.setFont(UITheme.FONT_BODY); 
+            txtTesto.setLineWrap(true);
+            txtTesto.setWrapStyleWord(true); 
+            txtTesto.setBorder(new EmptyBorder(12, 14, 12, 14));
+            txtTesto.setText(testo); 
+            
+            slStelle.setValue(stelle);
+            starsPreview = buildPreviewPanel();
+            slStelle.addChangeListener(e -> starsPreview.repaint());
+            build(nome);
+        }
+
+        private JPanel buildPreviewPanel() {
+            return new JPanel() {
+                @Override 
+                protected void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2 = UITheme.rh(g);
+                    g2.setColor(UITheme.STAR);
+                    int v = slStelle.getValue();
+                    float sz = 14f, gap = 5f;
+                    float total = 5 * sz + 4 * gap;
+                    float sx = (getWidth() - total) / 2f + sz / 2, cy = getHeight() / 2f;
+                    for (int i = 0; i < 5; i++) {
+                        UITheme.drawStar(g2, sx + i * (sz + gap), cy, sz / 2, sz / 2 * 0.42f, i < v);
+                    }
+                    g2.dispose();
+                }
+                @Override public Dimension getPreferredSize() { return new Dimension(180, 32); }
+                @Override public boolean   isOpaque()          { return false; }
+            };
+        }
+
+        private void build(String nome) {
+            JPanel root = new JPanel(new BorderLayout()); 
+            root.setBackground(UITheme.CARD);
+            root.add(UITheme.dialogHeader("Lascia una recensione", nome), BorderLayout.NORTH);
+
+            JPanel form = new JPanel(new GridBagLayout()); 
+            form.setBackground(UITheme.CARD);
+            form.setBorder(new EmptyBorder(22, 26, 16, 26));
+            GridBagConstraints g = new GridBagConstraints(); 
+            g.fill = GridBagConstraints.HORIZONTAL; 
+            g.weightx = 1; 
+            g.gridx = 0;
+
+            g.gridy = 0; g.insets = new Insets(0, 0, 6, 0); form.add(UITheme.fieldLabel("VALUTAZIONE"), g);
+            g.gridy = 1; slStelle.setOpaque(false); slStelle.setMajorTickSpacing(1);
+            slStelle.setPaintTicks(true); slStelle.setSnapToTicks(true); form.add(slStelle, g);
+            g.gridy = 2; g.insets = new Insets(4, 0, 18, 0); form.add(starsPreview, g);
+            g.gridy = 3; g.insets = new Insets(0, 0, 8, 0); form.add(UITheme.fieldLabel("TESTO RECENSIONE"), g);
+            
+            g.gridy = 4; g.weighty = 1.0; g.fill = GridBagConstraints.BOTH;
+            JScrollPane sc = new JScrollPane(txtTesto); 
+            sc.setBorder(BorderFactory.createLineBorder(UITheme.CARD_BORDER, 1, true));
+            form.add(sc, g); 
+            root.add(form, BorderLayout.CENTER);
+
+            JPanel footer = new JPanel(new GridLayout(1, 2, 14, 0)); 
+            footer.setBackground(UITheme.CARD);
+            footer.setBorder(new EmptyBorder(4, 26, 22, 26));
+            UITheme.TKButton ba = UITheme.btnGhost("Annulla"), bi = UITheme.btnPrimary("Pubblica");
+            ba.addActionListener(e -> dispose());
+            bi.addActionListener(e -> { 
+                if (txtTesto.getText().trim().isEmpty()) { UITheme.flashRed(txtTesto); return; } 
+                conf = true; dispose(); 
+            });
+            footer.add(ba); footer.add(bi); 
+            root.add(footer, BorderLayout.SOUTH);
+            setContentPane(root);
+        }
+
+        public boolean isConfermato() { return conf; }
+        public int     getStelle()     { return slStelle.getValue(); }
+        public String  getTesto()      { return txtTesto.getText().trim(); }
+    }
+
+    // =========================================================================
+    // DIALOG RISPOSTA DEL RISTORATORE
+    // =========================================================================
+
+    public static class RispostaDialog extends JDialog {
+        private boolean conf = false;
+        private final JTextArea txtRisposta;
+
+        public RispostaDialog(Window owner, String ristorante, String cliente, String prev) {
+            super(owner, "Risposta a @" + cliente, ModalityType.APPLICATION_MODAL);
+            setSize(560, 410);
+            setLocationRelativeTo(owner); 
+            setResizable(false);
+            
+            txtRisposta = new JTextArea(8, 36);
+            txtRisposta.setFont(UITheme.FONT_BODY); 
+            txtRisposta.setLineWrap(true);
+            txtRisposta.setWrapStyleWord(true); 
+            txtRisposta.setBorder(new EmptyBorder(12, 14, 12, 14));
+            txtRisposta.setText(prev);
+            build(ristorante, cliente);
+        }
+
+        private void build(String ristorante, String cliente) {
+            JPanel root = new JPanel(new BorderLayout()); 
+            root.setBackground(UITheme.CARD);
+            root.add(UITheme.dialogHeader("Rispondi alla recensione", ristorante + " · @" + cliente), BorderLayout.NORTH);
+
+            JPanel form = new JPanel(new GridBagLayout()); 
+            form.setBackground(UITheme.CARD);
+            form.setBorder(new EmptyBorder(22, 26, 16, 26));
+            GridBagConstraints g = new GridBagConstraints(); 
+            g.fill = GridBagConstraints.HORIZONTAL; 
+            g.weightx = 1; 
+            g.gridx = 0;
+            
+            g.gridy = 0; g.insets = new Insets(0, 0, 8, 0); form.add(UITheme.fieldLabel("TESTO DELLA RISPOSTA"), g);
+            g.gridy = 1; g.weighty = 1.0; g.fill = GridBagConstraints.BOTH;
+            JScrollPane sc = new JScrollPane(txtRisposta); 
+            sc.setBorder(BorderFactory.createLineBorder(UITheme.CARD_BORDER, 1, true));
+            form.add(sc, g); 
+            root.add(form, BorderLayout.CENTER);
+
+            JPanel footer = new JPanel(new GridLayout(1, 2, 14, 0)); 
+            footer.setBackground(UITheme.CARD);
+            footer.setBorder(new EmptyBorder(4, 26, 22, 26));
+            UITheme.TKButton ba = UITheme.btnGhost("Annulla"), bi = UITheme.btnPrimary("Invia Risposta");
+            ba.addActionListener(e -> dispose());
+            bi.addActionListener(e -> { 
+                if (txtRisposta.getText().trim().isEmpty()) { UITheme.flashRed(txtRisposta); return; } 
+                conf = true; dispose(); 
+            });
+            footer.add(ba); footer.add(bi); 
+            root.add(footer, BorderLayout.SOUTH);
+            setContentPane(root);
+        }
+
+        public boolean isConfermato() { return conf; }
+        public String  getRisposta()   { return txtRisposta.getText().trim(); }
     }
 }

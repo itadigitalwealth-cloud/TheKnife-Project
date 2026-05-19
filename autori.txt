@@ -1,5 +1,6 @@
-Matteo Vigano – MATRICOLA : 760537 – sede COMO
-FABIO  Vecaj  – MATRICOLA : 761232 – sede COMO
+Matteo Vigano       – MATRICOLA : 760537 – sede COMO
+FABIO  Vecaj        – MATRICOLA : 761232 – sede COMO
+De Zuane Samuele    - MATRICOLA : 763267 sede COMO
 
 LINK A GITLAB PER PROGETTO CONDIVISO : https://gitlab.com/socos/progettouniversita.git
 

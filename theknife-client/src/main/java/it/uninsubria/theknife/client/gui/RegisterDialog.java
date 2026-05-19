@@ -1,134 +1,196 @@
 /**
- * TheKnife – Modulo Client
- * Finestra di registrazione.
+ * TheKnife – Finestra di registrazione.
  *
- * @author Matteo Vigano  – 760537 – sede CO
- * @author Fabio Vecaj    – 761232 – sede CO
+ * @author Matteo Vigano      – 760537 – sede CO
+ * @author Fabio Vecaj        – 761232 – sede CO
+ * @author De Zuane Samuele   – 763267 – sede CO
  */
-
 package it.uninsubria.theknife.client.gui;
 
 import it.uninsubria.theknife.client.ClientTK;
 import it.uninsubria.theknife.common.Response;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.*;
 
 /**
- * Finestra modale di registrazione di un nuovo utente.
- * <p>
- * Raccoglie nome, cognome, username, password, data di nascita (opzionale),
- * domicilio e ruolo. Invia la richiesta al server tramite
- * {@link it.uninsubria.theknife.client.ServerConnection#registrazione}.
- * La password è hashata SHA-256 lato client prima della trasmissione.
- * </p>
+ * Dialog di registrazione con header navy affidabile,
+ * form a due colonne e toggle visivo Cliente/Ristoratore.
  */
 public class RegisterDialog extends JDialog {
 
-    /**
-     * Crea il dialog in modalità modale.
-     *
-     * @param owner finestra genitore
-     */
+    private final JTextField     tfNome      = UITheme.textField(13);
+    private final JTextField     tfCognome   = UITheme.textField(13);
+    private final JTextField     tfUsername  = UITheme.textField(13);
+    private final JPasswordField tfPassword  = UITheme.passwordField(13);
+    private final JTextField     tfNascita   = UITheme.textField(13);
+    private final JTextField     tfDomicilio = UITheme.textField(13);
+
+    private String ruoloSelezionato = "cliente";
+    private JPanel btnCliente, btnRistoratore;
+
     public RegisterDialog(Dialog owner) {
-        super(owner, "Registrazione – TheKnife", true);
-        setSize(420, 370);
+        super(owner, "Registrati – TheKnife", true);
+        setSize(500, 570);
         setLocationRelativeTo(owner);
-        initUI();
+        setResizable(false);
+        getContentPane().setBackground(UITheme.CARD);
+        build();
     }
 
-    /** Costruisce i componenti e i listener. */
-    private void initUI() {
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 8, 5, 8);
-        gbc.fill   = GridBagConstraints.HORIZONTAL;
+    private void build() {
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBackground(UITheme.CARD);
+        root.add(UITheme.dialogHeader("Crea il tuo account",
+                "Unisciti a TheKnife e scopri i migliori ristoranti"), BorderLayout.NORTH);
+        root.add(buildForm(),   BorderLayout.CENTER);
+        root.add(buildFooter(), BorderLayout.SOUTH);
+        setContentPane(root);
+    }
 
-        JTextField     txtNome      = new JTextField(15);
-        JTextField     txtCognome   = new JTextField(15);
-        JTextField     txtUsername  = new JTextField(15);
-        JPasswordField txtPassword  = new JPasswordField(15);
-        JTextField     txtNascita   = new JTextField("AAAA-MM-GG", 15); // opzionale
-        JTextField     txtDomicilio = new JTextField(15);
-        JComboBox<String> comboRuolo = new JComboBox<>(
-                new String[]{"cliente", "ristoratore"});
+    private JPanel buildForm() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBackground(UITheme.CARD);
+        form.setBorder(new EmptyBorder(18,26,8,26));
+        GridBagConstraints g = new GridBagConstraints();
+        g.fill=GridBagConstraints.HORIZONTAL; g.weightx=0.5;
 
-        int r = 0;
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Nome:"),          gbc);
-        gbc.gridx = 1;                   add(txtNome,                       gbc); r++;
+        // Nome + Cognome
+        g.gridx=0; g.gridy=0; g.insets=new Insets(0,0,3,8);  form.add(UITheme.fieldLabel("NOME"),g);
+        g.gridx=1; g.insets=new Insets(0,0,3,0);              form.add(UITheme.fieldLabel("COGNOME"),g);
+        g.gridx=0; g.gridy=1; g.insets=new Insets(0,0,12,8); form.add(tfNome,g);
+        g.gridx=1; g.insets=new Insets(0,0,12,0);             form.add(tfCognome,g);
 
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Cognome:"),        gbc);
-        gbc.gridx = 1;                   add(txtCognome,                    gbc); r++;
+        // Username (full width)
+        g.gridx=0; g.gridy=2; g.gridwidth=2; g.insets=new Insets(0,0,3,0);
+        form.add(UITheme.fieldLabel("USERNAME"),g);
+        g.gridy=3; g.insets=new Insets(0,0,12,0); form.add(tfUsername,g);
 
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Username:"),       gbc);
-        gbc.gridx = 1;                   add(txtUsername,                   gbc); r++;
+        // Password (full width)
+        g.gridy=4; g.insets=new Insets(0,0,3,0); form.add(UITheme.fieldLabel("PASSWORD"),g);
+        g.gridy=5; g.insets=new Insets(0,0,12,0); form.add(tfPassword,g);
 
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Password:"),       gbc);
-        gbc.gridx = 1;                   add(txtPassword,                   gbc); r++;
+        // Data nascita + Domicilio
+        g.gridwidth=1; g.weightx=0.5;
+        g.gridx=0; g.gridy=6; g.insets=new Insets(0,0,3,8);  form.add(UITheme.fieldLabel("DATA DI NASCITA (opz.)"),g);
+        g.gridx=1; g.insets=new Insets(0,0,3,0);              form.add(UITheme.fieldLabel("DOMICILIO (CITTÀ)"),g);
 
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Data nascita:"),   gbc);
-        gbc.gridx = 1;                   add(txtNascita,                    gbc); r++;
-
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Domicilio:"),      gbc);
-        gbc.gridx = 1;                   add(txtDomicilio,                  gbc); r++;
-
-        gbc.gridx = 0; gbc.gridy = r;   add(new JLabel("Ruolo:"),          gbc);
-        gbc.gridx = 1;                   add(comboRuolo,                    gbc); r++;
-
-        JButton btnOk     = new JButton("Registrati");
-        JButton btnAnnulla = new JButton("Annulla");
-        JPanel  pnlBtn    = new JPanel();
-        pnlBtn.add(btnOk);
-        pnlBtn.add(btnAnnulla);
-
-        gbc.gridx = 0; gbc.gridy = r;
-        gbc.gridwidth = 2;
-        add(pnlBtn, gbc);
-
-        /* ---- Listener Registrazione ---- */
-        btnOk.addActionListener(e -> {
-            String nome      = txtNome.getText().trim();
-            String cognome   = txtCognome.getText().trim();
-            String username  = txtUsername.getText().trim();
-            String password  = new String(txtPassword.getPassword());
-            String nascita   = txtNascita.getText().trim();
-            String domicilio = txtDomicilio.getText().trim();
-            String ruolo     = (String) comboRuolo.getSelectedItem();
-
-            // Validazione campi obbligatori
-            if (nome.isEmpty() || cognome.isEmpty() ||
-                    username.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Nome, cognome, username e password sono obbligatori.",
-                        "Attenzione", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            // La data di nascita è opzionale: se l'utente ha lasciato il placeholder la ignoriamo
-            String dataNascita = nascita.equals("AAAA-MM-GG") ? "" : nascita;
-
-            try {
-                Response resp = ClientTK.getConnessione().registrazione(
-                        nome, cognome, username, password,
-                        dataNascita, domicilio, ruolo);
-
-                if (resp.isSuccesso()) {
-                    JOptionPane.showMessageDialog(this,
-                            "Registrazione completata! Ora puoi fare il login.",
-                            "Successo", JOptionPane.INFORMATION_MESSAGE);
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            resp.getMessaggio(),
-                            "Errore Registrazione", JOptionPane.ERROR_MESSAGE);
+        // Placeholder data nascita
+        tfNascita.setForeground(UITheme.TEXT_MUTED); tfNascita.setText("AAAA-MM-GG");
+        tfNascita.addFocusListener(new FocusAdapter() {
+            @Override public void focusGained(FocusEvent e) {
+                if (tfNascita.getText().equals("AAAA-MM-GG")) {
+                    tfNascita.setText(""); tfNascita.setForeground(UITheme.TEXT);
                 }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this,
-                        "Errore di connessione al server: " + ex.getMessage(),
-                        "Errore", JOptionPane.ERROR_MESSAGE);
+            }
+            @Override public void focusLost(FocusEvent e) {
+                if (tfNascita.getText().isBlank()) {
+                    tfNascita.setText("AAAA-MM-GG"); tfNascita.setForeground(UITheme.TEXT_MUTED);
+                }
             }
         });
 
-        btnAnnulla.addActionListener(e -> dispose());
+        g.gridx=0; g.gridy=7; g.insets=new Insets(0,0,12,8); form.add(tfNascita,g);
+        g.gridx=1; g.insets=new Insets(0,0,12,0);             form.add(tfDomicilio,g);
+
+        // Toggle ruolo
+        g.gridx=0; g.gridy=8; g.gridwidth=2; g.insets=new Insets(0,0,4,0);
+        form.add(UITheme.fieldLabel("TIPO DI ACCOUNT"),g);
+        g.gridy=9; form.add(buildRuoloToggle(),g);
+        return form;
+    }
+
+    private JPanel buildRuoloToggle() {
+        JPanel toggle = new JPanel(new GridLayout(1,2,8,0));
+        toggle.setOpaque(false);
+        btnCliente     = ruoloCard("cliente",     "Cliente",     "Cerca ristoranti\ne scrivi recensioni");
+        btnRistoratore = ruoloCard("ristoratore", "Ristoratore", "Gestisci il tuo\nlocale");
+        toggle.add(btnCliente); toggle.add(btnRistoratore);
+        return toggle;
+    }
+
+    private JPanel ruoloCard(String ruolo, String titolo, String desc) {
+        JPanel card = new JPanel(new BorderLayout(0,3)) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = UITheme.rh(g);
+                boolean sel = ruoloSelezionato.equals(ruolo);
+                g2.setColor(sel ? UITheme.GOLD_LIGHT : UITheme.CARD);
+                g2.fillRoundRect(0,0,getWidth(),getHeight(),10,10);
+                g2.setColor(sel ? UITheme.GOLD : UITheme.CARD_BORDER);
+                g2.setStroke(new BasicStroke(sel ? 1.5f : 0.8f));
+                g2.drawRoundRect(0,0,getWidth()-1,getHeight()-1,10,10);
+                g2.dispose();
+            }
+        };
+        card.setOpaque(false); card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        card.setBorder(new EmptyBorder(10,14,10,14)); card.setPreferredSize(new Dimension(0,58));
+
+        JLabel t = new JLabel(titolo); t.setFont(UITheme.FONT_H3); t.setForeground(UITheme.TEXT);
+        JLabel d = new JLabel("<html>"+desc.replace("\n","<br>")+"</html>");
+        d.setFont(UITheme.FONT_SMALL); d.setForeground(UITheme.TEXT_MUTED);
+        card.add(t, BorderLayout.NORTH); card.add(d, BorderLayout.CENTER);
+
+        card.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                ruoloSelezionato = ruolo;
+                if (btnCliente != null)     btnCliente.repaint();
+                if (btnRistoratore != null) btnRistoratore.repaint();
+            }
+        });
+        return card;
+    }
+
+    private JPanel buildFooter() {
+        JPanel footer = new JPanel(new BorderLayout(0,10));
+        footer.setBackground(UITheme.CARD);
+        footer.setBorder(new EmptyBorder(8,26,20,26));
+
+        UITheme.TKButton btnOk = UITheme.btnPrimary("Crea account");
+        btnOk.setPreferredSize(new Dimension(Integer.MAX_VALUE, 40));
+        btnOk.addActionListener(e -> doRegistra());
+        footer.add(btnOk, BorderLayout.NORTH);
+
+        JLabel lnk = new JLabel("<html><center>Hai già un account?  <u>Accedi</u></center></html>");
+        lnk.setFont(UITheme.FONT_SMALL); lnk.setForeground(UITheme.GOLD);
+        lnk.setHorizontalAlignment(SwingConstants.CENTER);
+        lnk.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        lnk.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { dispose(); }
+        });
+        footer.add(lnk, BorderLayout.CENTER);
+        return footer;
+    }
+
+    private void doRegistra() {
+        String nome      = tfNome.getText().trim();
+        String cognome   = tfCognome.getText().trim();
+        String username  = tfUsername.getText().trim();
+        String password  = new String(tfPassword.getPassword());
+        String nascita   = tfNascita.getText().trim();
+        String domicilio = tfDomicilio.getText().trim();
+
+        if (nome.isEmpty())     { UITheme.flashRed(tfNome);     return; }
+        if (cognome.isEmpty())  { UITheme.flashRed(tfCognome);  return; }
+        if (username.isEmpty()) { UITheme.flashRed(tfUsername); return; }
+        if (password.isEmpty()) { UITheme.flashRed(tfPassword); return; }
+
+        String dataNascita = (nascita.equals("AAAA-MM-GG") || nascita.isEmpty()) ? "" : nascita;
+
+        try {
+            Response resp = ClientTK.getConnessione().registrazione(
+                    nome, cognome, username, password, dataNascita, domicilio, ruoloSelezionato);
+            if (resp.isSuccesso()) {
+                JOptionPane.showMessageDialog(this,
+                        "Registrazione completata!\nOra puoi accedere con le tue credenziali.",
+                        "Benvenuto su TheKnife", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, resp.getMessaggio(), "Errore", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Errore di connessione: "+ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

@@ -2,8 +2,9 @@
  * TheKnife – Modulo Common
  * Classe Response del protocollo Client/Server.
  *
- * @author Matteo Vigano  – 760537 – sede CO
- * @author Fabio Vecaj    – 761232 – sede CO
+ * @author Matteo Vigano      – 760537 – sede CO
+ * @author Fabio Vecaj        – 761232 – sede CO
+ * @author De Zuane Samuele   – 763267 – sede CO
  */
 
 package it.uninsubria.theknife.common;
