@@ -1,0 +1,86 @@
+# =============================================================================
+# TheKnife – .gitignore
+# Autori: Vigano 760537 · Vecaj 761232 · De Zuane 763267
+# =============================================================================
+
+# ─── Maven ────────────────────────────────────────────────────────────────────
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ─── Java ─────────────────────────────────────────────────────────────────────
+*.class
+*.jar
+!bin/serverTK.jar
+!bin/clientTK.jar
+
+# ─── IDE – IntelliJ IDEA ──────────────────────────────────────────────────────
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ─── IDE – Eclipse ────────────────────────────────────────────────────────────
+.classpath
+.project
+.settings/
+.factorypath
+
+# ─── IDE – VS Code ────────────────────────────────────────────────────────────
+.vscode/
+vscode/
+
+# ─── IDE – NetBeans ───────────────────────────────────────────────────────────
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ─── Sistema operativo ────────────────────────────────────────────────────────
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.nfs*
+
+# ─── File temporanei e log ────────────────────────────────────────────────────
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+
+# ─── File personali / configurazione locale ───────────────────────────────────
+*.env
+.env.local
+local.properties
+secrets.properties
+
+# ─── Cartelle generate / non necessarie al repository ────────────────────────
+META-INF/
+sources.txt
