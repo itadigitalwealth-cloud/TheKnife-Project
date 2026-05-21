@@ -1,14 +1,5 @@
-Matteo Vigano       – MATRICOLA : 760537 – sede COMO
-FABIO  Vecaj        – MATRICOLA : 761232 – sede COMO
-De Zuane Samuele    - MATRICOLA : 763267 sede COMO
+Vigano   Matteo       – matricola 760537 – sede CO
+Vecaj    Fabio        – matricola 761232 – sede CO
+De Zuane Samuele      – matricola 763267 – sede CO
 
-LINK A GITLAB PER PROGETTO CONDIVISO : https://gitlab.com/socos/progettouniversita.git
-
-2.1 Scelta della piattaforma di versionamento
-Per il controllo di versione del progetto TheKnife è stato deliberatamente 
-adottato GitLab anziché GitHub.
-La decisione si fonda su motivazioni sia organizzative sia tecniche:
-
-Abbonamento premium già attivo:	Il team dispone di un account GitLab con licenza a pagamento, 
-acquistato in precedenza per altri progetti. Sfruttare la medesima sottoscrizione consente di 
-evitare costi aggiuntivi e di centralizzare gli strumenti di gestione.
+Link repository GitHub: https://github.com/TUO_USERNAME/VIGANO_760537
