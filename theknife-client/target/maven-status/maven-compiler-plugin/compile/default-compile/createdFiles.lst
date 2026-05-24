@@ -10,6 +10,7 @@ it\uninsubria\theknife\client\gui\panels\HomePanel$4.class
 it\uninsubria\theknife\client\gui\panels\RecensioniPanel$1.class
 it\uninsubria\theknife\client\gui\panels\HomePanel$5.class
 it\uninsubria\theknife\client\gui\panels\SearchPanel$5.class
+it\uninsubria\theknife\client\gui\panels\SearchPanel$ScrollablePanel.class
 it\uninsubria\theknife\client\gui\FancyFrame.class
 it\uninsubria\theknife\client\gui\panels\SearchPanel$2.class
 it\uninsubria\theknife\client\gui\UITheme$1.class
@@ -59,6 +60,7 @@ it\uninsubria\theknife\client\gui\panels\RistorantiPanel$NuovoRistoranteDialog.c
 it\uninsubria\theknife\client\gui\panels\HomePanel$7.class
 it\uninsubria\theknife\client\gui\panels\PreferitiPanel$2.class
 it\uninsubria\theknife\client\gui\panels\RestaurantDetailPanel$2.class
+it\uninsubria\theknife\client\gui\panels\SearchPanel$8.class
 it\uninsubria\theknife\client\gui\FancyFrame$3.class
 it\uninsubria\theknife\client\gui\GradientPanel.class
 it\uninsubria\theknife\client\gui\UITheme$CardPanel.class

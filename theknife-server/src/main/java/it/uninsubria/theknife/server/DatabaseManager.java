@@ -171,10 +171,20 @@ public class DatabaseManager implements AutoCloseable {
                                              double prezzoMin, double prezzoMax,
                                              Boolean delivery, Boolean prenotazione,
                                              double stelleMin) throws SQLException {
-        // La query calcola dinamicamente media stelle e numero recensioni
-        // tramite LEFT JOIN con la tabella recensioni.
+
+        // ══ DEBUG ════════════════════════════════════════════════════════════════
+        System.out.println("\n[DB] ====== cercaRistoranti ======");
+        System.out.println("[DB] citta        = '" + citta + "'");
+        System.out.println("[DB] tipoCucina   = '" + tipoCucina + "'");
+        System.out.println("[DB] prezzoMin    = " + prezzoMin);
+        System.out.println("[DB] prezzoMax    = " + prezzoMax);
+        System.out.println("[DB] delivery     = " + delivery);
+        System.out.println("[DB] prenotazione = " + prenotazione);
+        System.out.println("[DB] stelleMin    = " + stelleMin);
+        // ══ END DEBUG ═══════════════════════════════════════════════════════════
+
         StringBuilder sql = new StringBuilder("""
-                SELECT r.*, 
+                SELECT r.*,
                        COALESCE(AVG(rec.stelle), 0)   AS media_stelle,
                        COUNT(rec.stelle)               AS num_recensioni
                 FROM ristoranti r
@@ -182,31 +192,20 @@ public class DatabaseManager implements AutoCloseable {
                 WHERE LOWER(r.citta) = LOWER(?)
                 """);
 
-        // Costruzione dinamica dei filtri opzionali
         if (tipoCucina != null && !tipoCucina.isBlank()) {
             sql.append(" AND LOWER(r.tipo_cucina) = LOWER(?)");
         }
-        if (prezzoMin > 0) {
-            sql.append(" AND r.fascia_prezzo >= ?");
-        }
-        if (prezzoMax > 0) {
-            sql.append(" AND r.fascia_prezzo <= ?");
-        }
-        if (delivery != null) {
-            sql.append(" AND r.delivery = ?");
-        }
-        if (prenotazione != null) {
-            sql.append(" AND r.prenotazione = ?");
-        }
-
+        if (prezzoMin > 0) sql.append(" AND r.fascia_prezzo >= ?");
+        if (prezzoMax > 0) sql.append(" AND r.fascia_prezzo <= ?");
+        if (delivery != null)     sql.append(" AND r.delivery = ?");
+        if (prenotazione != null) sql.append(" AND r.prenotazione = ?");
         sql.append(" GROUP BY r.nome");
-
-        // Filtro su media stelle applicato dopo il GROUP BY tramite HAVING
-        if (stelleMin > 0) {
-            sql.append(" HAVING COALESCE(AVG(rec.stelle), 0) >= ?");
-        }
-
+        if (stelleMin > 0) sql.append(" HAVING COALESCE(AVG(rec.stelle), 0) >= ?");
         sql.append(" ORDER BY r.nome");
+
+        // ══ DEBUG ═══════════════════════════════════════════════════════════════
+        System.out.println("[DB] SQL = " + sql);
+        // ══ END DEBUG ═══════════════════════════════════════════════════════════
 
         try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int i = 1;
@@ -218,7 +217,17 @@ public class DatabaseManager implements AutoCloseable {
             if (prenotazione != null) ps.setBoolean(i++, prenotazione);
             if (stelleMin > 0)        ps.setDouble(i, stelleMin);
 
-            return eseguiQueryRistoranti(ps);
+            List<Ristorante> risultati = eseguiQueryRistoranti(ps);
+
+            // ══ DEBUG ═══════════════════════════════════════════════════════════
+            System.out.println("[DB] risultati trovati = " + risultati.size());
+            for (Ristorante r : risultati) {
+                System.out.println("[DB]   - " + r.getNome() + " (" + r.getCitta() + ")");
+            }
+            System.out.println("[DB] ================================");
+            // ══ END DEBUG ═══════════════════════════════════════════════════════
+
+            return risultati;
         }
     }
 
