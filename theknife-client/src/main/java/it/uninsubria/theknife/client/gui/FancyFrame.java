@@ -7,14 +7,39 @@
  */
 package it.uninsubria.theknife.client.gui;
 
-import it.uninsubria.theknife.client.ClientTK;
-import it.uninsubria.theknife.client.gui.panels.*;
-import it.uninsubria.theknife.common.model.Utente;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+
+import it.uninsubria.theknife.client.ClientTK;
+import it.uninsubria.theknife.client.gui.panels.HomePanel;
+import it.uninsubria.theknife.client.gui.panels.PreferitiPanel;
+import it.uninsubria.theknife.client.gui.panels.RecensioniPanel;
+import it.uninsubria.theknife.client.gui.panels.RestaurantDetailPanel;
+import it.uninsubria.theknife.client.gui.panels.RistorantiPanel;
+import it.uninsubria.theknife.client.gui.panels.SearchPanel;
+import it.uninsubria.theknife.common.model.Utente;
 
 /**
  * Finestra principale con:
@@ -46,7 +71,13 @@ public class FancyFrame extends JFrame {
     private final UITheme.TKButton btnEsci   = UITheme.btnGhost("Esci");
 
     // Sidebar – pulsante attivo corrente
-    private SidebarItem sidebarAttivo = null;
+    private SidebarItem sidebarAttivo            = null;
+    private JLabel      sidebarSectionCliente     = null;
+    private JLabel      sidebarSectionRistoratore = null;
+    private SidebarItem itemPreferiti              = null;
+    private SidebarItem itemRecensioni             = null;
+    private SidebarItem itemMieiLocali             = null;
+    public  JPanel      ctaBannerPanel             = null;
 
     public FancyFrame() {
         super("TheKnife");
@@ -199,17 +230,22 @@ public class FancyFrame extends JFrame {
         sb.setOpaque(true);
 
         sb.add(sidebarSection("Principale"));
-        sb.add(sidebarItem("Home",         CARD_HOME,       null));
-        sb.add(sidebarItem("Esplora",      CARD_SEARCH,     null));
+        sb.add(sidebarItem("Home",    CARD_HOME,   null));
+        sb.add(sidebarItem("Esplora", CARD_SEARCH, null));
 
         sb.add(Box.createVerticalStrut(8));
-        sb.add(sidebarSection("Cliente"));
-        sb.add(sidebarItem("Preferiti",    CARD_PREFERITI,  "cliente"));
-        sb.add(sidebarItem("Recensioni",   CARD_RECENSIONI, null));
+        sidebarSectionCliente = sidebarSection("Cliente");
+        sb.add(sidebarSectionCliente);
+        itemPreferiti  = sidebarItem("Preferiti",  CARD_PREFERITI,  "loggato");
+        itemRecensioni = sidebarItem("Recensioni", CARD_RECENSIONI, "loggato");
+        sb.add(itemPreferiti);
+        sb.add(itemRecensioni);
 
         sb.add(Box.createVerticalStrut(8));
-        sb.add(sidebarSection("Ristoratore"));
-        sb.add(sidebarItem("Miei locali",  CARD_RISTORANTI, "ristoratore"));
+        sidebarSectionRistoratore = sidebarSection("Ristoratore");
+        sb.add(sidebarSectionRistoratore);
+        itemMieiLocali = sidebarItem("Miei locali", CARD_RISTORANTI, "ristoratore");
+        sb.add(itemMieiLocali);
 
         sb.add(Box.createVerticalGlue());
 
@@ -238,6 +274,9 @@ public class FancyFrame extends JFrame {
     private SidebarItem sidebarItem(String label, String card, String ruolo) {
         SidebarItem item = new SidebarItem(label);
         item.addActionListener(e -> {
+            if ("loggato".equals(ruolo) && !isLoggedIn()) {
+                showAccessDenied(); return;
+            }
             if ("cliente".equals(ruolo) && (!isLoggedIn() || !ClientTK.getUtenteLoggato().isCliente())) {
                 showAccessDenied(); return;
             }
@@ -280,6 +319,8 @@ public class FancyFrame extends JFrame {
             lblRole.setText(capitalize(u.getRuolo()) + "  •  ");
             btnAccedi.setVisible(false);
             btnEsci.setVisible(true);
+            aggiornaSidebar(u);
+            homePanel.refresh();
             getContentPane().revalidate();
             getContentPane().repaint();
         }
@@ -292,12 +333,39 @@ public class FancyFrame extends JFrame {
         btnAccedi.setVisible(true);
         btnEsci.setVisible(false);
         if (sidebarAttivo != null) { sidebarAttivo.setActive(false); sidebarAttivo = null; }
+        aggiornaSidebar(null);
         showCard(CARD_HOME);
         homePanel.refresh();
         getContentPane().revalidate();
         getContentPane().repaint();
     }
 
+    /**
+     * Aggiorna sidebar e banner in base al ruolo utente.
+     * Chiamato al login, logout e all avvio.
+     * @param u utente loggato, null se guest
+     */
+    public void aggiornaSidebar(Utente u) {
+        boolean isCliente     = u != null && u.isCliente();
+        boolean isRistoratore = u != null && u.isRistoratore();
+
+        // Tutte le sezioni sempre visibili:
+        // - sezione CLIENTE: visibile sempre (guest e tutti gli utenti loggati)
+        // - sezione RISTORATORE (Miei locali): visibile solo se ristoratore o guest
+        if (sidebarSectionCliente     != null) sidebarSectionCliente.setVisible(true);
+        if (itemPreferiti              != null) itemPreferiti.setVisible(true);
+        if (itemRecensioni             != null) itemRecensioni.setVisible(true);
+
+        // Miei locali: solo per ristoratori (o guest con accesso negato al click)
+        boolean showRistoratore = !isCliente;
+        if (sidebarSectionRistoratore != null) sidebarSectionRistoratore.setVisible(showRistoratore);
+        if (itemMieiLocali             != null) itemMieiLocali.setVisible(showRistoratore);
+
+        // Banner CTA "SEI UN RISTORATORE?" – nascosto per tutti gli utenti loggati
+        if (ctaBannerPanel != null) ctaBannerPanel.setVisible(u == null);
+    }
+
+    
     private String capitalize(String s) {
         if (s == null || s.isEmpty()) return s;
         return s.substring(0, 1).toUpperCase() + s.substring(1);
@@ -310,8 +378,11 @@ public class FancyFrame extends JFrame {
     public void showCard(String name)   { cardLayout.show(centerPanel, name); }
     public boolean isLoggedIn()         { return ClientTK.isLoggato(); }
     public Utente  getUtenteCorrente()  { return ClientTK.getUtenteLoggato(); }
-    public RestaurantDetailPanel getDetailPanel() { return detailPanel; }
-    public SearchPanel getSearchPanel() { return searchPanel; }
+    public RestaurantDetailPanel getDetailPanel()    { return detailPanel; }
+    public SearchPanel           getSearchPanel()    { return searchPanel; }
+    public RecensioniPanel       getRecensioniPanel(){ return recensioniPanel; }
+    public PreferitiPanel        getPreferitiPanel() { return preferitiPanel; }
+    public RistorantiPanel       getRistorantiPanel(){ return ristorantiPanel; }
 
     // =========================================================================
     // SIDEBAR ITEM – componente custom

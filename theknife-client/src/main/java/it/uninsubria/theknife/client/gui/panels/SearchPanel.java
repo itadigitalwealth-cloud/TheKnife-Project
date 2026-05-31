@@ -265,7 +265,7 @@ public class SearchPanel extends GradientPanel {
 
     private void addCard(Ristorante r, boolean topRated) {
         UITheme.CardPanel card = UITheme.cardPanel(new BorderLayout());
-        card.setPreferredSize(new Dimension(215, topRated?146:126));
+        card.setPreferredSize(new Dimension(250, topRated?172:152));
         card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         JPanel inner = new JPanel(); inner.setLayout(new BoxLayout(inner,BoxLayout.Y_AXIS));
@@ -329,9 +329,8 @@ public class SearchPanel extends GradientPanel {
     }
 
     private static String stelleStr(int n) {
-        StringBuilder sb = new StringBuilder();
-        for (int i=1;i<=5;i++) sb.append(i<=n?"\u2605":"\u2606");
-        return sb.toString();
+        // Usa asterischi invece di Unicode stelle per evitare quadratini su Windows
+        return n + (n==1?" stella":" stelle");
     }
 
     private static void flashField(JTextField tf) {
@@ -435,8 +434,9 @@ public class SearchPanel extends GradientPanel {
         private void updStars() {
             int v=slSt.getValue();
             if (v==0) { lblSt.setText("Qualsiasi"); lblSt.setForeground(UITheme.TEXT_MUTED); return; }
-            StringBuilder sb=new StringBuilder(); for (int i=1;i<=5;i++) sb.append(i<=v?"\u2605":"\u2606");
-            lblSt.setText(sb+" e oltre"); lblSt.setForeground(UITheme.STAR);
+            // Testo descrittivo invece di caratteri Unicode stelle (evita quadratini su Windows)
+            String[] desc = {"","1 stella","2 stelle","3 stelle","4 stelle","5 stelle"};
+            lblSt.setText(desc[v] + " e oltre"); lblSt.setForeground(UITheme.STAR);
         }
         private static JLabel fldLbl(String t) { JLabel l=new JLabel(t); l.setFont(UITheme.FONT_LABEL); l.setForeground(UITheme.TEXT_MUTED); return l; }
         private static JCheckBox chkBox(String t) { JCheckBox c=new JCheckBox(t); c.setFont(UITheme.FONT_BODY); c.setForeground(UITheme.TEXT); c.setBackground(UITheme.CARD); c.setFocusPainted(false); return c; }

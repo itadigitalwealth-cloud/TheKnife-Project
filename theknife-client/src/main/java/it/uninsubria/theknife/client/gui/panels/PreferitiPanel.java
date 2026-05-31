@@ -6,20 +6,46 @@
  */
 package it.uninsubria.theknife.client.gui.panels;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+
 import it.uninsubria.theknife.client.ClientTK;
-import it.uninsubria.theknife.client.gui.*;
+import it.uninsubria.theknife.client.gui.FancyFrame;
+import it.uninsubria.theknife.client.gui.GradientPanel;
+import it.uninsubria.theknife.client.gui.UITheme;
 import it.uninsubria.theknife.common.CommandType;
 import it.uninsubria.theknife.common.Request;
 import it.uninsubria.theknife.common.Response;
 import it.uninsubria.theknife.common.model.Ristorante;
-
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * Pannello per la visualizzazione e gestione dei ristoranti preferiti del cliente.
@@ -114,10 +140,13 @@ public class PreferitiPanel extends GradientPanel {
     public void refreshData() {
         gridPanel.removeAll();
 
-        if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isCliente()) {
-            aggiungiLabel("Accedi come cliente per vedere i tuoi preferiti.");
-            lblCount.setText("");
-            return;
+        if (!ClientTK.isLoggato()) {
+            aggiungiLabel("Effettua il login per vedere i tuoi ristoranti preferiti.");
+            lblCount.setText(""); return;
+        }
+        if (!ClientTK.getUtenteLoggato().isCliente()) {
+            aggiungiLabel("I preferiti sono una funzionalità riservata ai clienti.");
+            lblCount.setText(""); return;
         }
 
         aggiungiLabel("Caricamento in corso...");
@@ -135,7 +164,7 @@ public class PreferitiPanel extends GradientPanel {
             protected void done() {
                 try {
                     cache = get();
-                    System.out.println("[DEBUG] Elementi arrivati a destinazione: " + (cache != null ? cache.size() : "null"));
+                   // System.out.println("[DEBUG] Elementi arrivati a destinazione: " + (cache != null ? cache.size() : "null"));
                     popolaGriglia();
                 } catch (Exception ex) {
                     gridPanel.removeAll();
@@ -189,8 +218,8 @@ public class PreferitiPanel extends GradientPanel {
 
     private void addCard(Ristorante r) {
         UITheme.CardPanel card = UITheme.cardPanel(new BorderLayout());
-        card.setPreferredSize(new Dimension(240, 140));
-        card.setMinimumSize(new Dimension(240, 140)); // Impedisce il totale schiacciamento
+        card.setPreferredSize(new Dimension(280, 170));
+        card.setMinimumSize(new Dimension(280, 170));
         card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         JPanel inner = new JPanel();
@@ -208,9 +237,16 @@ public class PreferitiPanel extends GradientPanel {
         topRow.add(badgeWrap, BorderLayout.WEST);
 
         JButton btnX = buildRemoveBtn(r);
-        topRow.add(btnX, BorderLayout.EAST);
+        // Wrapper a dimensione fissa: impedisce che BorderLayout.EAST
+        // allunghi il bottone a tutta l'altezza della card (creava il grande ovale rosa)
+        JPanel btnWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        btnWrap.setOpaque(false);
+        btnWrap.add(btnX);
+        topRow.add(btnWrap, BorderLayout.EAST);
 
-        JLabel nome = new JLabel(r.getNome());
+        // Tronca il nome se troppo lungo per la card
+        String nomeStr = r.getNome().length() > 22 ? r.getNome().substring(0,20)+"..." : r.getNome();
+        JLabel nome = new JLabel(nomeStr);
         nome.setFont(UITheme.FONT_H2);
         nome.setForeground(UITheme.TEXT);
         nome.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -262,34 +298,27 @@ public class PreferitiPanel extends GradientPanel {
     }
 
     private JButton buildRemoveBtn(Ristorante r) {
-        JButton btn = new JButton("×") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = UITheme.rh(g);
-                g2.setColor(new Color(254, 226, 226));
-                g2.fillOval(0, 0, getWidth(), getHeight());
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JButton btn = new JButton("×");
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btn.setForeground(UITheme.DANGER);
-        btn.setPreferredSize(new Dimension(24, 24));
-        btn.setMaximumSize(new Dimension(24, 24));
+        btn.setBackground(new Color(254, 226, 226));
+        btn.setOpaque(true);
+        btn.setPreferredSize(new Dimension(26, 26));
+        btn.setMaximumSize(new Dimension(26, 26));
+        btn.setMinimumSize(new Dimension(26, 26));
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setToolTipText("Rimuovi dai preferiti");
-
         btn.addActionListener(e -> rimuovi(r.getNome()));
         return btn;
     }
 
     private void aggiungiManualeFlusso() {
         if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isCliente()) {
-            JOptionPane.showMessageDialog(this, "Devi essere loggato come cliente per salvare i preferiti.",
-                    "Accesso negato", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "I preferiti sono riservati agli account cliente. Accedi come cliente per usare questa funzione.",
+                    "Sezione riservata", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -394,7 +423,7 @@ public class PreferitiPanel extends GradientPanel {
                         dialog.dispose();
                         refreshData();
                     } else {
-                        JOptionPane.showMessageDialog(dialog, r.getMessaggio(), "Attenzione", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(dialog, (r.getMessaggio()!=null&&!r.getMessaggio().isBlank())?r.getMessaggio():(r.isSuccesso()?"Operazione completata.":"Operazione fallita."), "Attenzione", JOptionPane.WARNING_MESSAGE);
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(dialog, "Errore: " + ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);

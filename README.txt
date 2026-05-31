@@ -9,8 +9,6 @@
    De Zuane Samuele      – matricola 763267 – sede CO
 
  Corso  : Laboratorio Interdisciplinare B
- A.A.   : 2024/2025
- Docente: Giovanni Meroni
  Java   : JDK 17 LTS o superiore
 
 ================================================================================

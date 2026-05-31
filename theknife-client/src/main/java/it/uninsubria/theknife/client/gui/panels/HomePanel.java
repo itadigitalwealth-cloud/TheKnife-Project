@@ -7,19 +7,44 @@
  */
 package it.uninsubria.theknife.client.gui.panels;
 
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Path2D;
+import java.util.List;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+
 import it.uninsubria.theknife.client.ClientTK;
-import it.uninsubria.theknife.client.gui.*;
+import it.uninsubria.theknife.client.gui.FancyFrame;
+import it.uninsubria.theknife.client.gui.GradientPanel;
+import it.uninsubria.theknife.client.gui.UITheme;
 import it.uninsubria.theknife.common.CommandType;
 import it.uninsubria.theknife.common.Request;
 import it.uninsubria.theknife.common.Response;
 import it.uninsubria.theknife.common.model.Ristorante;
-
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
-import java.util.List;
 
 /**
  * Home panel: hero + ristoranti per città/domicilio + feature card + CTA Premium.
@@ -30,6 +55,7 @@ public class HomePanel extends GradientPanel {
 
     private final JTextField      tfCitta  = UITheme.textField(24);
     private final UITheme.TKButton btnCerca = UITheme.btnPrimary("Cerca");
+    private JPanel ctaBannerRef = null;
 
     private final JLabel lblTitolo = new JLabel("Ristoranti disponibili");
     private final JLabel lblSub    = new JLabel("Inserisci una città per iniziare.");
@@ -64,7 +90,9 @@ public class HomePanel extends GradientPanel {
         body.add(Box.createVerticalStrut(40));
         body.add(buildFeatureRow());
         body.add(Box.createVerticalStrut(44));
-        body.add(buildCTAPremium()); // La nuova CTA raffinata e riprogettata
+        ctaBannerRef = buildCTAPremium();
+        body.add(ctaBannerRef); // banner "SEI UN RISTORATORE?" con ref salvato
+        parent.ctaBannerPanel = ctaBannerRef; // registra nel frame per aggiornaSidebar
         body.add(Box.createVerticalStrut(24));
 
         JScrollPane scroll = new JScrollPane(body);
@@ -184,13 +212,31 @@ public class HomePanel extends GradientPanel {
         cardsRow.add(buildFeatureCard(
                 "preferiti", "Preferiti",
                 "Salva i locali che ami.\nRitrovali con un click.",
-                () -> { parent.showCard(FancyFrame.CARD_PREFERITI); }
+                () -> {
+                    if (!ClientTK.isLoggato()) {
+                        JOptionPane.showMessageDialog(parent,
+                            "Devi effettuare il login per accedere ai Preferiti.",
+                            "Accesso riservato", JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+                    parent.getPreferitiPanel().refreshData();
+                    parent.showCard(FancyFrame.CARD_PREFERITI);
+                }
         ));
 
         cardsRow.add(buildFeatureCard(
                 "stelle", "Recensioni",
                 "Condividi la tua esperienza.\nLeggi le opinioni di chi c'è stato.",
-                () -> { parent.showCard(FancyFrame.CARD_RECENSIONI); }
+                () -> {
+                    if (!ClientTK.isLoggato()) {
+                        JOptionPane.showMessageDialog(parent,
+                            "Devi effettuare il login per accedere alle Recensioni.",
+                            "Accesso riservato", JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+                    parent.getRecensioniPanel().refreshData();
+                    parent.showCard(FancyFrame.CARD_RECENSIONI);
+                }
         ));
 
         container.add(cardsRow, BorderLayout.CENTER);
@@ -348,7 +394,22 @@ public class HomePanel extends GradientPanel {
         // Bottone d'azione posizionato perfettamente a destra
         UITheme.TKButton btn = UITheme.btnPrimary("Inizia ora →");
         btn.setPreferredSize(new Dimension(135, 36));
-        btn.addActionListener(e -> parent.showCard(FancyFrame.CARD_RISTORANTI));
+        btn.addActionListener(e -> {
+            if (!ClientTK.isLoggato()) {
+                JOptionPane.showMessageDialog(parent,
+                    "Devi registrarti o accedere come ristoratore per gestire i tuoi locali.",
+                    "Accesso riservato", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            if (!ClientTK.getUtenteLoggato().isRistoratore()) {
+                JOptionPane.showMessageDialog(parent,
+                    "Questa sezione è riservata ai ristoratori. Il tuo account è registrato come cliente.",
+                    "Sezione riservata", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            parent.showCard(FancyFrame.CARD_RISTORANTI);
+            parent.getRistorantiPanel().refreshData();
+        });
         
         gbc.gridx = 1; gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.EAST;
@@ -422,6 +483,11 @@ public class HomePanel extends GradientPanel {
         lblTitolo.setText("Ristoranti disponibili");
         lblSub.setText("Inserisci una città nella barra di ricerca qui sopra.");
         gridPanel.removeAll(); gridPanel.revalidate(); gridPanel.repaint();
+        // Aggiorna visibilità banner ristoratore in base al ruolo corrente
+        // Banner nascosto per tutti gli utenti loggati
+        if (ctaBannerRef != null) {
+            ctaBannerRef.setVisible(!ClientTK.isLoggato());
+        }
     }
 
     private void cercaPerCitta() {

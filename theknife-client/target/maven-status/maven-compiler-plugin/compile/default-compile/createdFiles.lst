@@ -20,7 +20,6 @@ it\uninsubria\theknife\client\gui\UITheme$TKButton$1.class
 it\uninsubria\theknife\client\gui\panels\RecensioniPanel$RecensioneDialog$1.class
 it\uninsubria\theknife\client\gui\UITheme$TKButton.class
 it\uninsubria\theknife\client\gui\UITheme.class
-it\uninsubria\theknife\client\gui\panels\PreferitiPanel$4.class
 it\uninsubria\theknife\client\gui\panels\SearchPanel$3.class
 it\uninsubria\theknife\client\gui\FancyFrame$SidebarItem$1.class
 it\uninsubria\theknife\client\gui\panels\HomePanel$WrapLayout.class
@@ -64,11 +63,13 @@ it\uninsubria\theknife\client\gui\panels\SearchPanel$8.class
 it\uninsubria\theknife\client\gui\FancyFrame$3.class
 it\uninsubria\theknife\client\gui\GradientPanel.class
 it\uninsubria\theknife\client\gui\UITheme$CardPanel.class
+it\uninsubria\theknife\client\gui\panels\RistorantiPanel$NuovoRistoranteDialog$1.class
 it\uninsubria\theknife\client\gui\UITheme$SidebarItem$1.class
 it\uninsubria\theknife\client\gui\panels\HomePanel.class
 it\uninsubria\theknife\client\gui\panels\SearchPanel.class
 it\uninsubria\theknife\client\gui\LoginDialog$1.class
 it\uninsubria\theknife\client\gui\panels\SearchPanel$1.class
+it\uninsubria\theknife\client\gui\panels\RistorantiPanel$ScrollablePanel.class
 it\uninsubria\theknife\client\gui\panels\RecensioniPanel$2.class
 it\uninsubria\theknife\client\gui\panels\RecensioniPanel$FancyReviewSelectionDialog.class
 it\uninsubria\theknife\client\gui\UITheme$StarChip.class

@@ -7,20 +7,46 @@
  */
 package it.uninsubria.theknife.client.gui.panels;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Window;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+
 import it.uninsubria.theknife.client.ClientTK;
-import it.uninsubria.theknife.client.gui.*;
+import it.uninsubria.theknife.client.gui.FancyFrame;
+import it.uninsubria.theknife.client.gui.GradientPanel;
+import it.uninsubria.theknife.client.gui.UITheme;
 import it.uninsubria.theknife.common.CommandType;
 import it.uninsubria.theknife.common.Request;
 import it.uninsubria.theknife.common.Response;
 import it.uninsubria.theknife.common.model.Recensione;
 import it.uninsubria.theknife.common.model.Ristorante;
-
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Pannello di gestione recensioni per Clienti e Ristoratori.
@@ -120,10 +146,16 @@ public class RecensioniPanel extends GradientPanel {
         btnRispondi.addActionListener(e -> rispondiRecensione());
         btnNuova.addActionListener(e    -> nuovaRecensione());
         
-        bar.add(btnElimina); 
+        bar.add(btnElimina);
         bar.add(btnModifica);
-        bar.add(btnRispondi); 
+        bar.add(btnRispondi);
         bar.add(btnNuova);
+        // Stato iniziale: Rispondi nascosto finché non viene chiamato aggiornaVisibilitaPulsanti()
+        // Viene mostrato solo se loggato come ristoratore
+        btnRispondi.setVisible(false);
+        btnElimina.setVisible(false);
+        btnModifica.setVisible(false);
+        btnNuova.setVisible(false);
         return bar;
     }
 
@@ -346,7 +378,7 @@ public class RecensioniPanel extends GradientPanel {
                                     .aggiungiParametro("stelle", dlg.getStelle())
                                     .aggiungiParametro("testo", dlg.getTesto()));
                     
-                    toast(r.getMessaggio(), r.isSuccesso());
+                    toast((r.getMessaggio()!=null&&!r.getMessaggio().isBlank())?r.getMessaggio():(r.isSuccesso()?"Operazione completata.":"Operazione fallita."), r.isSuccesso());
                     refreshData();
 
                 } catch (Exception ex) {
@@ -373,7 +405,7 @@ public class RecensioniPanel extends GradientPanel {
                             .aggiungiParametro("nomeRistorante", sel.getNomeRistorante())
                             .aggiungiParametro("stelle", dlg.getStelle())
                             .aggiungiParametro("testo", dlg.getTesto()));
-            toast(r.getMessaggio(), r.isSuccesso());
+            toast((r.getMessaggio()!=null&&!r.getMessaggio().isBlank())?r.getMessaggio():(r.isSuccesso()?"Operazione completata.":"Operazione fallita."), r.isSuccesso());
             if (r.isSuccesso()) refreshData();
         } catch (Exception ex) { toast("Errore: " + ex.getMessage(), false); }
     }
@@ -391,7 +423,7 @@ public class RecensioniPanel extends GradientPanel {
             Response r = ClientTK.getConnessione().invia(
                     new Request(CommandType.CLIENTE_ELIMINA_RECENSIONE, ClientTK.getUtenteLoggato().getUsername())
                             .aggiungiParametro("nomeRistorante", sel.getNomeRistorante()));
-            toast(r.getMessaggio(), r.isSuccesso());
+            toast((r.getMessaggio()!=null&&!r.getMessaggio().isBlank())?r.getMessaggio():(r.isSuccesso()?"Operazione completata.":"Operazione fallita."), r.isSuccesso());
             if (r.isSuccesso()) refreshData();
         } catch (Exception ex) { toast("Errore: " + ex.getMessage(), false); }
     }
@@ -413,7 +445,7 @@ public class RecensioniPanel extends GradientPanel {
                             .aggiungiParametro("nomeRistorante", sel.getNomeRistorante())
                             .aggiungiParametro("usernameCliente", sel.getUsernameCliente())
                             .aggiungiParametro("risposta", dlg.getRisposta()));
-            toast(r.getMessaggio(), r.isSuccesso());
+            toast((r.getMessaggio()!=null&&!r.getMessaggio().isBlank())?r.getMessaggio():(r.isSuccesso()?"Operazione completata.":"Operazione fallita."), r.isSuccesso());
             if (r.isSuccesso()) refreshData();
         } catch (Exception ex) { toast("Errore: " + ex.getMessage(), false); }
     }
@@ -440,10 +472,15 @@ public class RecensioniPanel extends GradientPanel {
     }
 
     private void aggiornaVisibilitaPulsanti() {
-        boolean isC = ClientTK.isLoggato() && ClientTK.getUtenteLoggato().isCliente();
-        boolean isR = ClientTK.isLoggato() && ClientTK.getUtenteLoggato().isRistoratore();
-        btnNuova.setVisible(isC); btnModifica.setVisible(isC);
-        btnElimina.setVisible(isC); btnRispondi.setVisible(isR);
+        boolean loggato = ClientTK.isLoggato();
+        boolean isC = loggato && ClientTK.getUtenteLoggato().isCliente();
+        boolean isR = loggato && ClientTK.getUtenteLoggato().isRistoratore();
+        // Bottoni cliente: solo per clienti loggati
+        btnNuova.setVisible(isC);
+        btnModifica.setVisible(isC);
+        btnElimina.setVisible(isC);
+        // Rispondi: SOLO per ristoratori loggati
+        btnRispondi.setVisible(isR);
     }
 
     private boolean checkCliente() {
@@ -453,9 +490,15 @@ public class RecensioniPanel extends GradientPanel {
         if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isRistoratore()) { toast("Azione riservata ai gestori delle attività.", false); return false; } return true;
     }
     private void toast(String msg, boolean ok) {
+        // Fallback se il server non fornisce un messaggio
+        String testo = (msg != null && !msg.isBlank()) ? msg
+                : (ok ? "Operazione completata con successo." : "Si è verificato un errore.");
         UIManager.put("OptionPane.background", Color.WHITE);
-        UIManager.put("Panel.background", Color.WHITE);
-        JOptionPane.showMessageDialog(this, "<html><body style='width:300px; font-family:Segoe UI;'>" + msg + "</body></html>", ok ? "Esito" : "Attenzione",
+        UIManager.put("Panel.background",      Color.WHITE);
+        JOptionPane.showMessageDialog(this,
+                "<html><body style='width:300px; font-family:Segoe UI; color:#0F172A; font-size:13px;'>"
+                + testo + "</body></html>",
+                ok ? "Esito" : "Attenzione",
                 ok ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
     }
     private void addLabel(String txt) {

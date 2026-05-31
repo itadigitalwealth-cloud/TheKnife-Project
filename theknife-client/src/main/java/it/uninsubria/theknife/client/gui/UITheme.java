@@ -7,11 +7,33 @@
  */
 package it.uninsubria.theknife.client.gui;
 
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.LayoutManager;
+import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Path2D;
+
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 
 /**
  * Design system TheKnife: colori, font, factory componenti.
@@ -232,8 +254,12 @@ public final class UITheme {
     public static void apply() {
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
         catch (Exception ignored) {}
-        UIManager.put("Panel.background",              BG);
-        UIManager.put("OptionPane.background",         CARD);
+        // NON impostare Panel.background globalmente:
+        // sovrascrive i pannelli interni di JOptionPane rendendo il testo invisibile (bianco su bianco).
+        UIManager.put("OptionPane.background",         Color.WHITE);
+        UIManager.put("OptionPane.messageForeground",  TEXT);
+        UIManager.put("OptionPane.messageFont",        FONT_BODY);
+        UIManager.put("OptionPane.buttonFont",         FONT_BODY);
         UIManager.put("ScrollBar.width",               8);
         UIManager.put("ScrollBar.thumb",               CARD_BORDER);
         UIManager.put("ScrollBar.track",               BG);

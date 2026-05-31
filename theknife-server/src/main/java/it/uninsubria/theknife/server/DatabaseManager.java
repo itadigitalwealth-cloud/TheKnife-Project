@@ -9,13 +9,19 @@
 
 package it.uninsubria.theknife.server;
 
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
 import it.uninsubria.theknife.common.model.Recensione;
 import it.uninsubria.theknife.common.model.Ristorante;
 import it.uninsubria.theknife.common.model.Utente;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Fornisce tutti i metodi di accesso al database PostgreSQL per la
@@ -173,14 +179,14 @@ public class DatabaseManager implements AutoCloseable {
                                              double stelleMin) throws SQLException {
 
         // ══ DEBUG ════════════════════════════════════════════════════════════════
-        System.out.println("\n[DB] ====== cercaRistoranti ======");
-        System.out.println("[DB] citta        = '" + citta + "'");
-        System.out.println("[DB] tipoCucina   = '" + tipoCucina + "'");
-        System.out.println("[DB] prezzoMin    = " + prezzoMin);
-        System.out.println("[DB] prezzoMax    = " + prezzoMax);
-        System.out.println("[DB] delivery     = " + delivery);
-        System.out.println("[DB] prenotazione = " + prenotazione);
-        System.out.println("[DB] stelleMin    = " + stelleMin);
+       // System.out.println("\n[DB] ====== cercaRistoranti ======");
+        //System.out.println("[DB] citta        = '" + citta + "'");
+        //System.out.println("[DB] tipoCucina   = '" + tipoCucina + "'");
+        //System.out.println("[DB] prezzoMin    = " + prezzoMin);
+        //System.out.println("[DB] prezzoMax    = " + prezzoMax);
+        //System.out.println("[DB] delivery     = " + delivery);
+        //System.out.println("[DB] prenotazione = " + prenotazione);
+        //System.out.println("[DB] stelleMin    = " + stelleMin);
         // ══ END DEBUG ═══════════════════════════════════════════════════════════
 
         StringBuilder sql = new StringBuilder("""
@@ -204,7 +210,7 @@ public class DatabaseManager implements AutoCloseable {
         sql.append(" ORDER BY r.nome");
 
         // ══ DEBUG ═══════════════════════════════════════════════════════════════
-        System.out.println("[DB] SQL = " + sql);
+        //System.out.println("[DB] SQL = " + sql);
         // ══ END DEBUG ═══════════════════════════════════════════════════════════
 
         try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -220,11 +226,11 @@ public class DatabaseManager implements AutoCloseable {
             List<Ristorante> risultati = eseguiQueryRistoranti(ps);
 
             // ══ DEBUG ═══════════════════════════════════════════════════════════
-            System.out.println("[DB] risultati trovati = " + risultati.size());
-            for (Ristorante r : risultati) {
-                System.out.println("[DB]   - " + r.getNome() + " (" + r.getCitta() + ")");
-            }
-            System.out.println("[DB] ================================");
+            //System.out.println("[DB] risultati trovati = " + risultati.size());
+            //for (Ristorante r : risultati) {
+            //    System.out.println("[DB]   - " + r.getNome() + " (" + r.getCitta() + ")");
+            //}
+            //System.out.println("[DB] ================================");
             // ══ END DEBUG ═══════════════════════════════════════════════════════
 
             return risultati;
