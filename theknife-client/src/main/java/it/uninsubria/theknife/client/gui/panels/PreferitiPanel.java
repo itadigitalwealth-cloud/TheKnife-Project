@@ -62,6 +62,11 @@ public class PreferitiPanel extends GradientPanel {
     private final UITheme.TKButton btnSort = UITheme.btnGhost("Ordina per stelle");
     private JScrollPane scroll;
 
+    /**
+     * Costruisce il pannello dei preferiti.
+     *
+     * @param parent la finestra principale {@link FancyFrame} usata per la navigazione
+     */
     public PreferitiPanel(FancyFrame parent) {
         super(new BorderLayout());
         this.parent = parent;
@@ -137,6 +142,11 @@ public class PreferitiPanel extends GradientPanel {
         return bar;
     }
 
+    /**
+     * Ricarica dal server la lista dei ristoranti preferiti dell'utente corrente
+     * e aggiorna la griglia. Mostra un messaggio appropriato se l'utente non è
+     * loggato o non ha il ruolo di cliente.
+     */
     public void refreshData() {
         gridPanel.removeAll();
 

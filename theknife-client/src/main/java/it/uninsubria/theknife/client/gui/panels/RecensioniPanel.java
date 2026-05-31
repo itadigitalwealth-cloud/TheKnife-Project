@@ -69,6 +69,11 @@ public class RecensioniPanel extends GradientPanel {
     private final UITheme.TKButton btnElimina  = UITheme.btnDanger("Elimina");
     private final UITheme.TKButton btnRispondi = UITheme.btnPrimary("Rispondi");
 
+    /**
+     * Costruisce il pannello recensioni adattivo per clienti e ristoratori.
+     *
+     * @param parent la finestra principale {@link FancyFrame} usata per la navigazione
+     */
     public RecensioniPanel(FancyFrame parent) {
         super(new BorderLayout());
         this.parent = parent;
@@ -163,6 +168,12 @@ public class RecensioniPanel extends GradientPanel {
     // LOGICA DI CARICAMENTO E FILTRAGGIO
     // =========================================================================
 
+    /**
+     * Ricarica le recensioni dal server in base al ruolo dell'utente loggato:
+     * per i clienti recupera le proprie recensioni ({@code CLIENTE_VISUALIZZA_MIE_RECENSIONI}),
+     * per i ristoratori recupera quelle ricevute ({@code RISTORATORE_VISUALIZZA_RECENSIONI}).
+     * La chiamata avviene in un {@link SwingWorker} per non bloccare l'EDT.
+     */
     public void refreshData() {
         cardArea.removeAll(); 
         cache = List.of();
@@ -516,6 +527,13 @@ public class RecensioniPanel extends GradientPanel {
         private boolean selezionato = false;
         private final JComboBox<String> cmbLista;
 
+        /**
+         * Crea il dialog di selezione ristorante per una nuova recensione.
+         *
+         * @param owner la finestra padre
+         * @param lista la lista dei ristoranti disponibili nella città cercata
+         * @param citta la città cercata (mostrata nel titolo del dialog)
+         */
         public FancyReviewSelectionDialog(Window owner, List<Ristorante> lista, String citta) {
             super(owner, "Nuova recensione", ModalityType.APPLICATION_MODAL);
             setSize(540, 260);
@@ -559,7 +577,13 @@ public class RecensioniPanel extends GradientPanel {
             setContentPane(root);
         }
 
+        /** @return {@code true} se l'utente ha scelto un ristorante e premuto "Procedi" */
         public boolean isSelezionato() { return selezionato; }
+        /**
+         * Restituisce il nome del ristorante selezionato nella combobox.
+         *
+         * @return il nome del ristorante selezionato
+         */
         public String getNomeSelezionato() {
             return (String) cmbLista.getSelectedItem();
         }
@@ -575,6 +599,14 @@ public class RecensioniPanel extends GradientPanel {
         private final JPanel    starsPreview;
         private final JTextArea txtTesto;
 
+        /**
+         * Crea il dialog di inserimento/modifica recensione precompilato con i valori esistenti.
+         *
+         * @param owner  la finestra padre
+         * @param nome   il nome del ristorante da recensire (mostrato nel titolo)
+         * @param stelle il valore di stelle iniziale da mostrare nello slider (1-5)
+         * @param testo  il testo iniziale della recensione (vuoto per nuova recensione)
+         */
         public RecensioneDialog(Window owner, String nome, int stelle, String testo) {
             super(owner, "Compila Recensione – " + nome, ModalityType.APPLICATION_MODAL);
             setSize(560, 490);
@@ -654,8 +686,11 @@ public class RecensioniPanel extends GradientPanel {
             setContentPane(root);
         }
 
+        /** @return {@code true} se l'utente ha premuto "Pubblica" */
         public boolean isConfermato() { return conf; }
+        /** @return il numero di stelle selezionato dallo slider (1-5) */
         public int     getStelle()     { return slStelle.getValue(); }
+        /** @return il testo della recensione inserito dall'utente */
         public String  getTesto()      { return txtTesto.getText().trim(); }
     }
 
@@ -667,6 +702,14 @@ public class RecensioniPanel extends GradientPanel {
         private boolean conf = false;
         private final JTextArea txtRisposta;
 
+        /**
+         * Crea il dialog per rispondere a una recensione.
+         *
+         * @param owner       la finestra padre
+         * @param ristorante  il nome del ristorante a cui appartiene la recensione
+         * @param cliente     lo username del cliente autore della recensione
+         * @param prev        la risposta precedente (vuota se non ancora risposto)
+         */
         public RispostaDialog(Window owner, String ristorante, String cliente, String prev) {
             super(owner, "Risposta a @" + cliente, ModalityType.APPLICATION_MODAL);
             setSize(560, 410);
@@ -716,7 +759,9 @@ public class RecensioniPanel extends GradientPanel {
             setContentPane(root);
         }
 
+        /** @return {@code true} se il ristoratore ha premuto "Invia Risposta" */
         public boolean isConfermato() { return conf; }
+        /** @return il testo della risposta inserito dal ristoratore */
         public String  getRisposta()   { return txtRisposta.getText().trim(); }
     }
 }

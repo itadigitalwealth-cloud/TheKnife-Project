@@ -23,6 +23,11 @@ public class LoginDialog extends JDialog {
 
     private Utente utenteLoggato;
 
+    /**
+     * Crea e mostra il dialog di login modale.
+     *
+     * @param owner la finestra padre che possiede questo dialog
+     */
     public LoginDialog(Frame owner) {
         super(owner, "Accedi – TheKnife", true);
         setSize(400, 410);
@@ -102,5 +107,10 @@ public class LoginDialog extends JDialog {
         }
     }
 
+    /**
+     * Restituisce l'utente autenticato al termine del login.
+     *
+     * @return l'oggetto {@link Utente} se il login ha avuto successo, {@code null} altrimenti
+     */
     public Utente getUtenteLoggato() { return utenteLoggato; }
 }

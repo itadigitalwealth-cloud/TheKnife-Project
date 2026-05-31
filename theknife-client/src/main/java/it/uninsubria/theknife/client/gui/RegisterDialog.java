@@ -31,6 +31,11 @@ public class RegisterDialog extends JDialog {
     private String ruoloSelezionato = "cliente";
     private JPanel btnCliente, btnRistoratore;
 
+    /**
+     * Crea il dialog di registrazione modale.
+     *
+     * @param owner il dialog padre che possiede questa finestra
+     */
     public RegisterDialog(Dialog owner) {
         super(owner, "Registrati – TheKnife", true);
         setSize(500, 570);

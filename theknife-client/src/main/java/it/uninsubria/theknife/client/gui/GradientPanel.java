@@ -16,8 +16,24 @@ import java.awt.*;
  */
 public class GradientPanel extends JPanel {
 
+    /**
+     * Crea un pannello con sfondo {@link UITheme#BG} e layout di default ({@code FlowLayout}).
+     */
     public GradientPanel() { setBackground(UITheme.BG); }
+
+    /**
+     * Crea un pannello con sfondo {@link UITheme#BG} e il layout specificato.
+     *
+     * @param l il {@link LayoutManager} da applicare al pannello
+     */
     public GradientPanel(LayoutManager l) { super(l); setBackground(UITheme.BG); }
-    /** Compatibilità parte A – colori ignorati. */
+
+    /**
+     * Costruttore di compatibilità: i parametri colore vengono ignorati,
+     * il pannello usa sempre {@link UITheme#BG}.
+     *
+     * @param c1 colore iniziale (ignorato)
+     * @param c2 colore finale (ignorato)
+     */
     public GradientPanel(Color c1, Color c2) { setBackground(UITheme.BG); }
 }

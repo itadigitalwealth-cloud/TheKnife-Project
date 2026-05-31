@@ -1,12 +1,12 @@
 ================================================================================
- TheKnife – README
+ TheKnife - README
  Guida all'installazione, configurazione e avvio
 ================================================================================
 
  Autori:
-   Vigano   Matteo       – matricola 760537 – sede CO
-   Vecaj    Fabio        – matricola 761232 – sede CO
-   De Zuane Samuele      – matricola 763267 – sede CO
+   Vigano   Matteo       - matricola 760537 - sede CO
+   Vecaj    Fabio        - matricola 761232 - sede CO
+   De Zuane Samuele      - matricola 763267 - sede CO
 
  Corso  : Laboratorio Interdisciplinare B
  Java   : JDK 17 LTS o superiore
@@ -24,7 +24,7 @@
   7.  Avvio del client
   8.  Dati di test (data.sql)
   9.  Librerie esterne
- 10.  Note su particolarità tecniche
+ 10.  Note su particolarita tecniche
 
 ================================================================================
  1. DESCRIZIONE DEL PROGETTO
@@ -87,9 +87,10 @@ L'applicazione implementa un'architettura client/server distribuita con:
   |   +-- postgresql-42.7.3.jar      <- Driver JDBC PostgreSQL
   |
   +-- doc/
-  |   +-- manuale-utente.pdf         <- Manuale utente (22 pagine)
-  |   +-- manuale-tecnico.pdf        <- Manuale tecnico (20 pagine)
-  |   +-- diagrammi-ER-UML.docx      <- Schemi ER e diagrammi UML
+  |   +-- manuale-utente.pdf         <- Manuale utente
+  |   +-- manuale-tecnico.pdf        <- Manuale tecnico
+  |   +-- diagrammi.pdf              <- Schemi ER concettuale/ristrutturato e
+  |   |                                 diagrammi UML (sequenza, moduli)
   |   +-- javadoc/                   <- Documentazione JavaDoc generata
   |
   +-- theknife-common/               <- Modulo comune (modello + protocollo)
@@ -128,6 +129,25 @@ L'applicazione implementa un'architettura client/server distribuita con:
                   +-- RecensioniPanel.java
                   +-- PreferitiPanel.java
                   +-- RistorantiPanel.java
+
+  NOTA SULLA STRUTTURA DEL CODICE SORGENTE
+  -----------------------------------------
+  Il progetto adotta una struttura Maven multi-modulo, che e la convenzione
+  standard per progetti Java composti da piu moduli interdipendenti.
+  Il codice sorgente Java si trova nelle sottocartelle:
+
+    theknife-common/src/main/java/...
+    theknife-server/src/main/java/...
+    theknife-client/src/main/java/...
+
+  La directory src/ radice contiene esclusivamente gli script SQL del database
+  (src/db/init.sql e src/db/data.sql). Questa organizzazione e equivalente a
+  una singola cartella src/ e consente la compilazione dell'intero progetto
+  con il singolo comando:
+
+    mvn clean package
+
+  che produce automaticamente i due JAR eseguibili in bin/.
 
 ================================================================================
  4. CONFIGURAZIONE DATABASE POSTGRESQL
@@ -313,14 +333,17 @@ L'applicazione implementa un'architettura client/server distribuita con:
   Libreria              Versione   Posizione          Uso
   --------------------  ---------  -----------------  --------------------------
   postgresql JDBC       42.7.3     lib/               Connessione a PostgreSQL
-                                   (incluso nel JAR   Dichiarata nel pom.xml del
-                                   con maven-assembly) modulo theknife-server
+                                   (incluso anche nel  Dichiarata nel pom.xml del
+                                   fat-JAR serverTK    modulo theknife-server
+                                   tramite assembly)
 
   Nessuna libreria esterna e necessaria per il CLIENT. La GUI usa
   esclusivamente le API standard Java (Swing, Java2D, java.net.Socket).
 
   Il driver JDBC e incluso automaticamente nel fat-JAR serverTK.jar
   tramite il plugin maven-assembly-plugin con descriptor jar-with-dependencies.
+  La copia in lib/ e fornita per consultazione e per eventuale compilazione
+  manuale senza Maven.
 
   Per aggiornare il driver JDBC cambiare la versione nel pom.xml del modulo padre:
     <postgresql.version>42.7.3</postgresql.version>

@@ -52,12 +52,23 @@ import it.uninsubria.theknife.common.Request;
 import it.uninsubria.theknife.common.Response;
 import it.uninsubria.theknife.common.model.Ristorante;
 
+/**
+ * Pannello "I miei locali" riservato ai ristoratori.
+ * Mostra la griglia dei ristoranti registrati con valutazione media
+ * e conteggio recensioni, e permette di aggiungere nuovi locali tramite
+ * {@link NuovoRistoranteDialog}.
+ */
 public class RistorantiPanel extends GradientPanel {
 
     private final FancyFrame parent;
     private final JPanel gridPanel = new JPanel(new WrapLayout(FlowLayout.LEFT, 16, 16));
     private final JLabel lblCount  = new JLabel("");
 
+    /**
+     * Costruisce il pannello "I miei locali".
+     *
+     * @param parent la finestra principale {@link FancyFrame} usata per la navigazione
+     */
     public RistorantiPanel(FancyFrame parent) {
         super(new BorderLayout()); this.parent = parent;
         setBackground(UITheme.BG); initUI();
@@ -112,6 +123,11 @@ public class RistorantiPanel extends GradientPanel {
     // CARICAMENTO
     // =========================================================================
 
+    /**
+     * Ricarica dal server il riepilogo dei ristoranti del ristoratore corrente
+     * ({@code RISTORATORE_VISUALIZZA_RIEPILOGO}) e aggiorna la griglia.
+     * Se l'utente non è un ristoratore loggato, il metodo non esegue alcuna operazione.
+     */
     public void refreshData() {
         if (!ClientTK.isLoggato() || !ClientTK.getUtenteLoggato().isRistoratore()) return;
         gridPanel.removeAll();
@@ -265,6 +281,11 @@ public class RistorantiPanel extends GradientPanel {
         private final JCheckBox  chkDel = new JCheckBox("Delivery");
         private final JCheckBox  chkPren= new JCheckBox("Prenotazione online");
 
+        /**
+         * Crea il dialog di inserimento di un nuovo ristorante con valori predefiniti.
+         *
+         * @param owner la finestra padre
+         */
         public NuovoRistoranteDialog(Window owner) {
             super(owner, "Aggiungi ristorante", ModalityType.APPLICATION_MODAL);
             setSize(520, 560); setLocationRelativeTo(owner); setResizable(false);
@@ -353,16 +374,30 @@ public class RistorantiPanel extends GradientPanel {
             g.gridy = row * 2 + 1; g.insets = new Insets(2, 4, 4, 4); f.add(tf, g);
         }
 
+        /** @return {@code true} se il ristoratore ha premuto "Salva ristorante" */
         public boolean isConfermato() { return conf; }
+        /** @return il nome del ristorante inserito */
         public String  getNome()      { return tfNome.getText().trim(); }
+        /** @return la nazione del ristorante */
         public String  getNazione()   { return tfNaz.getText().trim(); }
+        /** @return la città del ristorante */
         public String  getCitta()     { return tfCitta.getText().trim(); }
+        /** @return l'indirizzo del ristorante (può essere vuoto) */
         public String  getIndirizzo() { return tfInd.getText().trim(); }
+        /** @return la latitudine del ristorante
+         * @throws NumberFormatException se il valore inserito non è un numero valido */
         public double  getLat()       { return Double.parseDouble(tfLat.getText().trim()); }
+        /** @return la longitudine del ristorante
+         * @throws NumberFormatException se il valore inserito non è un numero valido */
         public double  getLon()       { return Double.parseDouble(tfLon.getText().trim()); }
+        /** @return il prezzo medio per persona in euro
+         * @throws NumberFormatException se il valore inserito non è un numero valido */
         public double  getPrezzo()    { return Double.parseDouble(tfPrz.getText().trim()); }
+        /** @return il tipo di cucina del ristorante */
         public String  getCucina()    { return tfCuc.getText().trim(); }
+        /** @return {@code true} se il servizio di delivery è disponibile */
         public boolean isDel()        { return chkDel.isSelected(); }
+        /** @return {@code true} se il servizio di prenotazione online è disponibile */
         public boolean isPren()       { return chkPren.isSelected(); }
     }
 

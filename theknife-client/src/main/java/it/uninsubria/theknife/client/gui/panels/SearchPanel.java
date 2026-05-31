@@ -25,6 +25,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 
+/**
+ * Pannello di ricerca avanzata ristoranti con filtri combinabili.
+ * <p>
+ * Implementa un {@link Scrollable} wrapper ({@code ScrollablePanel}) che impone al
+ * {@code JScrollPane} la larghezza del viewport, permettendo a {@code WrapLayout}
+ * di calcolare correttamente la dimensione delle card.
+ * </p>
+ */
 public class SearchPanel extends GradientPanel {
 
     private static final String PH = "Cerca una città... (es. Como, Milano)";
@@ -67,6 +75,11 @@ public class SearchPanel extends GradientPanel {
         }
     };
 
+    /**
+     * Costruisce il pannello di ricerca avanzata.
+     *
+     * @param parent la finestra principale {@link FancyFrame} usata per la navigazione
+     */
     public SearchPanel(FancyFrame parent) {
         super(new BorderLayout()); this.parent = parent; setBackground(UITheme.BG); initUI();
     }
@@ -306,6 +319,10 @@ public class SearchPanel extends GradientPanel {
     // UTILS
     // =========================================================================
 
+    /**
+     * Reimposta il pannello di ricerca al suo stato iniziale:
+     * azzera tutti i filtri, pulisce i chip e rimuove i risultati.
+     */
     public void refresh() {
         tfCitta.setText(PH); tfCitta.setForeground(Color.LIGHT_GRAY); placeholderAttivo=true;
         fCucina=""; fPrzMin=0; fPrzMax=0; fStelle=0; fDelivery=false; fPrenot=false;
@@ -317,6 +334,14 @@ public class SearchPanel extends GradientPanel {
         gridPanel.add(l); gridPanel.revalidate(); gridPanel.repaint();
     }
 
+    /**
+     * Crea un badge etichetta con sfondo colorato e bordi arrotondati.
+     *
+     * @param txt il testo da visualizzare nel badge
+     * @param bg  il colore di sfondo del badge
+     * @param fg  il colore del testo
+     * @return un {@link JLabel} stilizzato come badge
+     */
     static JLabel solidBadge(String txt, Color bg, Color fg) {
         JLabel l = new JLabel(txt) {
             @Override protected void paintComponent(Graphics g) {
@@ -372,6 +397,17 @@ public class SearchPanel extends GradientPanel {
         private final JLabel lblSt = new JLabel("Qualsiasi");
         private final JCheckBox chkD=chkBox("Delivery disponibile"), chkP=chkBox("Prenotazione online");
 
+        /**
+         * Crea il dialog dei filtri avanzati con i valori correntemente impostati.
+         *
+         * @param owner  la finestra padre
+         * @param cucina tipo di cucina già selezionato (vuoto se nessuno)
+         * @param min    prezzo minimo (0 se non impostato)
+         * @param max    prezzo massimo (0 se non impostato)
+         * @param st     stelle minime (0 se qualsiasi)
+         * @param d      {@code true} se il filtro delivery è attivo
+         * @param p      {@code true} se il filtro prenotazione è attivo
+         */
         public FiltriDialog(Window owner, String cucina, double min, double max, double st, boolean d, boolean p) {
             super(owner,"Filtri avanzati",ModalityType.APPLICATION_MODAL);
             setSize(400,490); setLocationRelativeTo(owner); setResizable(false);
@@ -441,12 +477,19 @@ public class SearchPanel extends GradientPanel {
         private static JLabel fldLbl(String t) { JLabel l=new JLabel(t); l.setFont(UITheme.FONT_LABEL); l.setForeground(UITheme.TEXT_MUTED); return l; }
         private static JCheckBox chkBox(String t) { JCheckBox c=new JCheckBox(t); c.setFont(UITheme.FONT_BODY); c.setForeground(UITheme.TEXT); c.setBackground(UITheme.CARD); c.setFocusPainted(false); return c; }
 
+        /** @return {@code true} se l'utente ha confermato i filtri premendo "Applica" */
         public boolean isConfermato() { return ok; }
+        /** @return il tipo di cucina inserito, oppure stringa vuota se non specificato */
         public String  getCucina()   { return tfC.getText().trim(); }
+        /** @return il prezzo minimo impostato, oppure {@code 0} se non specificato */
         public double  getPrzMin()   { return parse(tfMn.getText()); }
+        /** @return il prezzo massimo impostato, oppure {@code 0} se non specificato */
         public double  getPrzMax()   { return parse(tfMx.getText()); }
+        /** @return il numero minimo di stelle selezionato (0 = qualsiasi) */
         public double  getStelle()   { return slSt.getValue(); }
+        /** @return {@code true} se il filtro delivery è attivo */
         public boolean isDel()       { return chkD.isSelected(); }
+        /** @return {@code true} se il filtro prenotazione è attivo */
         public boolean isPren()      { return chkP.isSelected(); }
         private static double parse(String s) { try { return Double.parseDouble(s.trim()); } catch(Exception e) { return 0; } }
     }

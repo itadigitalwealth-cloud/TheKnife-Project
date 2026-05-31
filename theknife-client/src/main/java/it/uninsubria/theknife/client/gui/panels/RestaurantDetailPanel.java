@@ -47,6 +47,11 @@ public class RestaurantDetailPanel extends GradientPanel {
     private final JPanel recArea   = new JPanel();
     private final JLabel lblRecHdr = new JLabel("Recensioni");
 
+    /**
+     * Costruisce il pannello di dettaglio ristorante.
+     *
+     * @param parent la finestra principale {@link FancyFrame} usata per la navigazione
+     */
     public RestaurantDetailPanel(FancyFrame parent) {
         super(new BorderLayout());
         this.parent = parent;
@@ -165,6 +170,13 @@ public class RestaurantDetailPanel extends GradientPanel {
         return section;
     }
 
+    /**
+     * Imposta il ristorante da visualizzare e aggiorna tutti i componenti del pannello.
+     * Popola la card informativa, aggiorna la visibilità dei pulsanti e avvia il
+     * caricamento asincrono delle recensioni.
+     *
+     * @param r il {@link Ristorante} da visualizzare
+     */
     public void setRistorante(Ristorante r) {
         this.ristoranteCorrente = r;
         popolaInfoCard(r);
@@ -390,6 +402,12 @@ public class RestaurantDetailPanel extends GradientPanel {
         private final JComboBox<String> cmbStelle;
         private final JTextArea txtAreaRecensione;
 
+        /**
+         * Crea il dialog di inserimento recensione per il ristorante specificato.
+         *
+         * @param owner           la finestra padre
+         * @param nomeRistorante  il nome del ristorante (mostrato nel titolo)
+         */
         public FancyReviewDialog(Window owner, String nomeRistorante) {
             super(owner, "Lascia una recensione per " + nomeRistorante, ModalityType.APPLICATION_MODAL);
             setSize(520, 380);
@@ -458,8 +476,16 @@ public class RestaurantDetailPanel extends GradientPanel {
             setContentPane(mainPanel);
         }
 
+        /** @return {@code true} se l'utente ha premuto "Invia Recensione" */
         public boolean isConfermato() { return confermato; }
+        /** @return il testo della recensione inserito dall'utente */
         public String getTesto() { return txtAreaRecensione.getText().strip(); }
+        /**
+         * Converte la selezione della combobox (0=5 stelle, 4=1 stella) nel
+         * valore numerico corretto.
+         *
+         * @return il numero di stelle selezionato (1-5)
+         */
         public int getStelle() {
             return 5 - cmbStelle.getSelectedIndex();
         }

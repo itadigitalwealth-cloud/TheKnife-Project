@@ -61,6 +61,11 @@ public class HomePanel extends GradientPanel {
     private final JLabel lblSub    = new JLabel("Inserisci una città per iniziare.");
     private final JPanel gridPanel = new JPanel(new WrapLayout(FlowLayout.LEFT, 12, 12));
 
+    /**
+     * Costruisce la schermata Home e inizializza tutti i componenti grafici.
+     *
+     * @param parent la finestra principale {@link FancyFrame} usata per la navigazione tra pannelli
+     */
     public HomePanel(FancyFrame parent) {
         super(new BorderLayout(0, 0));
         this.parent = parent;
@@ -469,6 +474,11 @@ public class HomePanel extends GradientPanel {
     // LOGICA DI BUSINESS & SWINGWORKER
     // =========================================================================
 
+    /**
+     * Aggiorna la Home in base allo stato di autenticazione corrente.
+     * Se l'utente loggato ha un domicilio impostato, carica automaticamente
+     * i ristoranti della sua città; altrimenti ripristina la barra di ricerca.
+     */
     public void refresh() {
         if (ClientTK.isLoggato()) {
             String dom = ClientTK.getUtenteLoggato().getDomicilio();
